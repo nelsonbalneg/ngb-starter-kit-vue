@@ -1,4 +1,4 @@
-# Enterprise Starter Kit
+# NGB Vue Laravel Starter Kit
 
 Enterprise starter kit for Laravel, Vue, Inertia, TypeScript, Tailwind CSS, Fortify, and Spatie Laravel Permission with Teams.
 
