@@ -10,8 +10,17 @@ https://github.com/nelsonbalneg/ngb-starter-kit-vue
 
 Works now, before Packagist is configured:
 
-```bash
-composer create-project --stability=dev --repository-url=https://github.com/nelsonbalneg/ngb-starter-kit-vue.git ngb/ngb-starter-kit-vue my-new-app dev-main
+PowerShell:
+
+```powershell
+composer create-project --repository='{"type":"vcs","url":"https://github.com/nelsonbalneg/ngb-starter-kit-vue"}' ngb/ngb-starter-kit-vue my-new-app v1.0.0
+cd my-new-app
+```
+
+Windows Command Prompt:
+
+```bat
+composer create-project --repository="{""type"":""vcs"",""url"":""https://github.com/nelsonbalneg/ngb-starter-kit-vue""}" ngb/ngb-starter-kit-vue my-new-app v1.0.0
 cd my-new-app
 ```
 
@@ -247,8 +256,16 @@ composer create-project ngb/ngb-starter-kit-vue my-new-app
 
 Temporary install command before Packagist has a stable tag:
 
-```bash
-composer create-project --stability=dev --repository-url=https://github.com/nelsonbalneg/ngb-starter-kit-vue.git ngb/ngb-starter-kit-vue my-new-app dev-main
+PowerShell:
+
+```powershell
+composer create-project --repository='{"type":"vcs","url":"https://github.com/nelsonbalneg/ngb-starter-kit-vue"}' ngb/ngb-starter-kit-vue my-new-app v1.0.0
+```
+
+Windows Command Prompt:
+
+```bat
+composer create-project --repository="{""type"":""vcs"",""url"":""https://github.com/nelsonbalneg/ngb-starter-kit-vue""}" ngb/ngb-starter-kit-vue my-new-app v1.0.0
 ```
 
 If Packagist already lists the package but Composer says it cannot find it with stability `stable`, create and push a stable tag:

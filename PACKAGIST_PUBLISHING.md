@@ -112,10 +112,18 @@ Copy-Item .env.example .env
 
 ## Temporary Install Before Packagist Is Ready
 
-Use this while waiting for Packagist setup or while the package only has `dev-main`:
+Use this while waiting for Packagist setup. Do not use `--repository-url` with a GitHub URL because Composer will treat it as a Composer repository and look for `packages.json`.
 
-```bash
-composer create-project --stability=dev --repository-url=https://github.com/nelsonbalneg/ngb-starter-kit-vue.git ngb/ngb-starter-kit-vue my-new-app dev-main
+PowerShell:
+
+```powershell
+composer create-project --repository='{"type":"vcs","url":"https://github.com/nelsonbalneg/ngb-starter-kit-vue"}' ngb/ngb-starter-kit-vue my-new-app v1.0.0
+```
+
+Windows Command Prompt:
+
+```bat
+composer create-project --repository="{""type"":""vcs"",""url"":""https://github.com/nelsonbalneg/ngb-starter-kit-vue""}" ngb/ngb-starter-kit-vue my-new-app v1.0.0
 ```
 
 If the package is already visible on Packagist but has no stable tag yet, this shorter dev command can also work:

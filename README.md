@@ -25,8 +25,8 @@ Enterprise starter kit for Laravel, Vue, Inertia, TypeScript, Tailwind CSS, Fort
 
 Create a new project directly from GitHub while the package is not yet published on Packagist:
 
-```bash
-composer create-project --stability=dev --repository-url=https://github.com/nelsonbalneg/ngb-starter-kit-vue.git ngb/ngb-starter-kit-vue my-new-app dev-main
+```powershell
+composer create-project --repository='{"type":"vcs","url":"https://github.com/nelsonbalneg/ngb-starter-kit-vue"}' ngb/ngb-starter-kit-vue my-new-app v1.0.0
 cd my-new-app
 ```
 
