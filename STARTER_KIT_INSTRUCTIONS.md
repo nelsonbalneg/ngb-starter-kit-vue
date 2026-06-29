@@ -3,7 +3,7 @@
 Use this guide when creating a new Laravel/Vue project from:
 
 ```text
-https://github.com/ngb/ngb-starter-kit-vue
+https://github.com/nelsonbalneg/ngb-starter-kit-vue
 ```
 
 ## 1. Create A New Project
@@ -18,7 +18,7 @@ cd my-new-app
 Alternative GitHub clone:
 
 ```bash
-git clone https://github.com/ngb/ngb-starter-kit-vue.git my-new-app
+git clone https://github.com/nelsonbalneg/ngb-starter-kit-vue.git my-new-app
 cd my-new-app
 ```
 
