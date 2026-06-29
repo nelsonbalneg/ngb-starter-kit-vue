@@ -260,6 +260,12 @@ composer clear-cache
 composer create-project ngb/ngb-starter-kit-vue my-new-app
 ```
 
+If Composer still cannot find a stable package, force the version:
+
+```bash
+composer create-project ngb/ngb-starter-kit-vue my-new-app "v1.0.0"
+```
+
 Use `composer require` only for installable Laravel packages. Use `composer create-project` for this starter kit because it is a complete application skeleton.
 
 ## 11. Starter Kit Rules

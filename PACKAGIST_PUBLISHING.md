@@ -154,6 +154,24 @@ composer clear-cache
 composer create-project ngb/ngb-starter-kit-vue my-new-app
 ```
 
+If Composer still reports the stability error even though Packagist shows `v1.0.0`, force the version:
+
+```bash
+composer create-project ngb/ngb-starter-kit-vue my-new-app "v1.0.0"
+```
+
+You can also ask Composer what versions it can see:
+
+```bash
+composer show ngb/ngb-starter-kit-vue --all
+```
+
+If `v1.0.0` does not appear in that list, clear the Composer cache again and click **Update** on Packagist:
+
+```bash
+composer clear-cache
+```
+
 ## Future Releases
 
 For every new starter-kit release:
