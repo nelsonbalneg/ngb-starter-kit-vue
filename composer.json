@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "ngb/enterprise-starter-kit",
+    "name": "ngb/ngb-starter-kit-vue",
     "type": "project",
     "description": "Enterprise Laravel, Vue, Inertia, Tailwind, Fortify, and Spatie Teams starter kit.",
     "keywords": [
@@ -98,8 +98,7 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi",
-            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
-            "@php artisan migrate --graceful --ansi"
+            "@php -r \"echo 'Configure your .env database values, then run: php artisan migrate:fresh --seed'.PHP_EOL;\""
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"

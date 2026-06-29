@@ -23,13 +23,20 @@ Enterprise starter kit for Laravel, Vue, Inertia, TypeScript, Tailwind CSS, Fort
 
 ## First Setup
 
+Create a new project from Packagist:
+
 ```bash
-composer install
+composer create-project nelsonbalneg/ngb-starter-kit-vue my-new-app
+cd my-new-app
+```
+
+Then install frontend dependencies and configure the app:
+
+```bash
 cp .env.example .env
 php artisan key:generate
-php artisan migrate --force
-php artisan db:seed --force
 npm install
+php artisan migrate:fresh --seed
 npm run build
 ```
 

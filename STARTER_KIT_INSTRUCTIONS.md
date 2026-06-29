@@ -8,7 +8,14 @@ https://github.com/nelsonbalneg/ngb-starter-kit-vue
 
 ## 1. Create A New Project
 
-Clone the starter kit into a new folder:
+Recommended Packagist install:
+
+```bash
+composer create-project nelsonbalneg/ngb-starter-kit-vue my-new-app
+cd my-new-app
+```
+
+Alternative GitHub clone:
 
 ```bash
 git clone https://github.com/nelsonbalneg/ngb-starter-kit-vue.git my-new-app
@@ -34,6 +41,14 @@ git commit -m "Initial commit from NGB starter kit"
 ```
 
 ## 2. Install Dependencies
+
+If you used `composer create-project`, Composer dependencies are already installed. Install frontend dependencies:
+
+```bash
+npm install
+```
+
+If you used `git clone`, install both backend and frontend dependencies:
 
 ```bash
 composer install
@@ -65,6 +80,8 @@ Then generate the app key:
 ```bash
 php artisan key:generate
 ```
+
+If you used `composer create-project`, the key is generated automatically. Running the command again is safe if `.env` was recreated.
 
 ## 4. Configure `.env`
 
@@ -180,7 +197,33 @@ git branch -M main
 git push -u origin main
 ```
 
-## 10. Starter Kit Rules
+## 10. Publish Starter Kit Updates To Packagist
+
+When you update the starter kit itself:
+
+```bash
+git add .
+git commit -m "Update starter kit"
+git tag v1.0.1
+git push origin main
+git push origin v1.0.1
+```
+
+Packagist package name:
+
+```text
+nelsonbalneg/ngb-starter-kit-vue
+```
+
+Install command:
+
+```bash
+composer create-project nelsonbalneg/ngb-starter-kit-vue my-new-app
+```
+
+Use `composer require` only for installable Laravel packages. Use `composer create-project` for this starter kit because it is a complete application skeleton.
+
+## 11. Starter Kit Rules
 
 - Do not commit `.env`.
 - Do not commit real credentials, tokens, or SSO secrets.
