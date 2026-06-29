@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\SiteAdministration;
 
+use App\Enums\OrganizationUnitType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,7 @@ class OrganizationUnitRequest extends FormRequest
         return [
             'organization_id' => ['required', 'integer', 'exists:organizations,id'],
             'parent_id' => ['nullable', 'integer', 'exists:organization_units,id'],
-            'type' => ['required', 'string', Rule::in(['office', 'department'])],
+            'type' => ['required', 'string', Rule::enum(OrganizationUnitType::class)],
             'name' => ['required', 'string', 'max:255'],
             'logo' => ['nullable', 'file', 'image', 'max:2048', 'mimes:jpeg,jpg,png,svg,webp'],
             'logo_path' => ['nullable', 'string', 'max:255'],

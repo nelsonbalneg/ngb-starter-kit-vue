@@ -136,8 +136,99 @@ const reset = (): void => {
 };
 
 
-const expandedParents = ref<Set<number>>(new Set(props.organizations.map((o) => o.id)));
-const expandedCampuses = ref<Set<number>>(new Set());
+const hasCampuses = (organization: Organization): boolean =>
+    (organization.children ?? []).length > 0;
+
+const hasOffices = (organization: Organization): boolean =>
+    (organization.units ?? []).length > 0;
+
+const hasDepartments = (unit: OrganizationUnit): boolean =>
+    (unit.children ?? []).length > 0;
+
+type OrganizationExpansionState = {
+    parents: number[];
+    campuses: number[];
+    offices: number[];
+};
+
+const expansionStorageKey = 'site-administration.organizations.expanded';
+
+const loadExpansionState = (): OrganizationExpansionState => {
+    if (typeof window === 'undefined') {
+        return { parents: [], campuses: [], offices: [] };
+    }
+
+    const stored = window.localStorage.getItem(expansionStorageKey);
+
+    if (!stored) {
+        return { parents: [], campuses: [], offices: [] };
+    }
+
+    try {
+        const parsed = JSON.parse(stored) as Partial<OrganizationExpansionState>;
+
+        return {
+            parents: Array.isArray(parsed.parents) ? parsed.parents : [],
+            campuses: Array.isArray(parsed.campuses) ? parsed.campuses : [],
+            offices: Array.isArray(parsed.offices) ? parsed.offices : [],
+        };
+    } catch {
+        return { parents: [], campuses: [], offices: [] };
+    }
+};
+
+const saveExpansionState = (): void => {
+    if (typeof window === 'undefined') return;
+
+    window.localStorage.setItem(
+        expansionStorageKey,
+        JSON.stringify({
+            parents: [...expandedParents.value],
+            campuses: [...expandedCampuses.value],
+            offices: [...expandedOffices.value],
+        }),
+    );
+};
+
+const restoreExpandableIds = (
+    savedIds: number[],
+    expandableIds: number[],
+): Set<number> => {
+    const currentIds = new Set(expandableIds);
+
+    return new Set(savedIds.filter((id) => currentIds.has(id)));
+};
+
+const savedExpansionState = loadExpansionState();
+
+const expandedParents = ref<Set<number>>(
+    restoreExpandableIds(
+        savedExpansionState.parents,
+        props.organizations.filter(hasCampuses).map((organization) => organization.id),
+    ),
+);
+const expandedCampuses = ref<Set<number>>(
+    restoreExpandableIds(
+        savedExpansionState.campuses,
+        props.organizations.flatMap((parent) =>
+            (parent.children ?? [])
+                .filter(hasOffices)
+                .map((campus) => campus.id),
+        ),
+    ),
+);
+const expandedOffices = ref<Set<number>>(
+    restoreExpandableIds(
+        savedExpansionState.offices,
+        props.organizations.flatMap((parent) =>
+            (parent.children ?? []).flatMap((campus) =>
+                (campus.units ?? [])
+                    .filter(hasDepartments)
+                    .map((office) => office.id),
+            ),
+        ),
+    ),
+);
 
 const toggleParent = (id: number): void => {
     if (expandedParents.value.has(id)) {
@@ -145,6 +236,8 @@ const toggleParent = (id: number): void => {
     } else {
         expandedParents.value.add(id);
     }
+
+    saveExpansionState();
 };
 
 const toggleCampus = (id: number): void => {
@@ -153,6 +246,18 @@ const toggleCampus = (id: number): void => {
     } else {
         expandedCampuses.value.add(id);
     }
+
+    saveExpansionState();
+};
+
+const toggleOffice = (id: number): void => {
+    if (expandedOffices.value.has(id)) {
+        expandedOffices.value.delete(id);
+    } else {
+        expandedOffices.value.add(id);
+    }
+
+    saveExpansionState();
 };
 
 // ─── Organization Dialog ──────────────────────────────────────────────────────
@@ -417,8 +522,9 @@ const unitDialogTitle = computed(() => {
                         <!-- Left: chevron + icon + info -->
                         <div class="flex min-w-0 flex-1 items-center gap-2">
                             <button
+                                v-if="hasCampuses(parent)"
                                 type="button"
-                                :aria-label="expandedParents.has(parent.id) ? 'Collapse' : 'Expand'"
+                                :aria-label="expandedParents.has(parent.id) ? `Collapse ${parent.name}` : `Expand ${parent.name}`"
                                 class="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                 @click="toggleParent(parent.id)"
                             >
@@ -428,6 +534,7 @@ const unitDialogTitle = computed(() => {
                                 />
                                 <ChevronRight v-else class="size-4" />
                             </button>
+                            <span v-else class="size-5 shrink-0" aria-hidden="true" />
 
                             <span class="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded bg-background ring-1 ring-border">
                                 <img
@@ -490,8 +597,8 @@ const unitDialogTitle = computed(() => {
                     </div>
 
                     <!-- Campus rows (collapsible) -->
-                    <div v-if="expandedParents.has(parent.id)">
-                        <div v-if="(parent.children ?? []).length" class="divide-y border-t bg-background">
+                    <div v-if="hasCampuses(parent) && expandedParents.has(parent.id)">
+                        <div class="divide-y border-t bg-background">
                             <!-- ── Campus Row ── -->
                             <div
                                 v-for="campus in parent.children ?? []"
@@ -502,8 +609,9 @@ const unitDialogTitle = computed(() => {
                                 <div class="flex items-center justify-between gap-2 border-b px-3 py-2">
                                     <div class="flex min-w-0 flex-1 items-center gap-2">
                                         <button
+                                            v-if="hasOffices(campus)"
                                             type="button"
-                                            :aria-label="expandedCampuses.has(campus.id) ? 'Collapse' : 'Expand'"
+                                            :aria-label="expandedCampuses.has(campus.id) ? `Collapse ${campus.name}` : `Expand ${campus.name}`"
                                             class="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                             @click="toggleCampus(campus.id)"
                                         >
@@ -513,6 +621,7 @@ const unitDialogTitle = computed(() => {
                                             />
                                             <ChevronRight v-else class="size-4" />
                                         </button>
+                                        <span v-else class="size-5 shrink-0" aria-hidden="true" />
 
                                         <span class="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded bg-muted ring-1 ring-border">
                                             <img
@@ -576,8 +685,8 @@ const unitDialogTitle = computed(() => {
                                 </div>
 
                                 <!-- Office rows (collapsible) -->
-                                <div v-if="expandedCampuses.has(campus.id)">
-                                    <div v-if="(campus.units ?? []).length" class="divide-y border-b bg-muted/10 pl-7">
+                                <div v-if="hasOffices(campus) && expandedCampuses.has(campus.id)">
+                                    <div class="divide-y border-b bg-muted/10 pl-7">
                                         <!-- ── Office Row ── -->
                                         <div
                                             v-for="office in campus.units ?? []"
@@ -586,6 +695,21 @@ const unitDialogTitle = computed(() => {
                                         >
                                             <div class="flex items-start justify-between gap-2">
                                                 <div class="flex min-w-0 gap-2">
+                                                    <button
+                                                        v-if="hasDepartments(office)"
+                                                        type="button"
+                                                        :aria-label="expandedOffices.has(office.id) ? `Collapse ${office.name}` : `Expand ${office.name}`"
+                                                        class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                        @click="toggleOffice(office.id)"
+                                                    >
+                                                        <ChevronDown
+                                                            v-if="expandedOffices.has(office.id)"
+                                                            class="size-4"
+                                                        />
+                                                        <ChevronRight v-else class="size-4" />
+                                                    </button>
+                                                    <span v-else class="size-5 shrink-0" aria-hidden="true" />
+
                                                     <span class="mt-0.5 flex size-6 shrink-0 items-center justify-center overflow-hidden rounded bg-background ring-1 ring-border">
                                                         <img
                                                             v-if="resolveLogoUrl(office.logo_path)"
@@ -661,7 +785,7 @@ const unitDialogTitle = computed(() => {
 
                                             <!-- Department sub-rows -->
                                             <div
-                                                v-if="(office.children ?? []).length"
+                                                v-if="hasDepartments(office) && expandedOffices.has(office.id)"
                                                 class="mt-2 space-y-1 border-t pt-2 pl-7"
                                             >
                                                 <div
@@ -718,28 +842,10 @@ const unitDialogTitle = computed(() => {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <p
-                                                v-else
-                                                class="mt-2 pl-7 text-[11px] italic text-muted-foreground"
-                                            >
-                                                No departments yet.
-                                            </p>
                                         </div>
-                                    </div>
-
-                                    <div v-else class="border-b py-3 pl-10 pr-3">
-                                        <p class="rounded-md border border-dashed px-3 py-2 text-[12px] text-muted-foreground">
-                                            No offices yet. Add an office under {{ campus.name }}.
-                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div v-else class="border-t px-7 py-3">
-                            <p class="rounded-md border border-dashed px-3 py-2 text-[12px] text-muted-foreground">
-                                No campuses yet. Add a campus under {{ parent.name }}.
-                            </p>
                         </div>
                     </div>
                 </div>

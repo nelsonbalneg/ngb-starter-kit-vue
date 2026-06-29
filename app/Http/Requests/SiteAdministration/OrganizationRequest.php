@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\SiteAdministration;
 
+use App\Enums\OrganizationType;
 use App\Models\Organization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -23,7 +24,7 @@ class OrganizationRequest extends FormRequest
 
         return [
             'parent_id' => ['nullable', 'integer', 'exists:organizations,id'],
-            'type' => ['required', 'string', Rule::in(['university', 'campus'])],
+            'type' => ['required', 'string', Rule::enum(OrganizationType::class)],
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('organizations', 'slug')->ignore($organizationId)],
             'description' => ['nullable', 'string', 'max:2000'],

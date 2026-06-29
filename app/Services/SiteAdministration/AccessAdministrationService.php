@@ -20,6 +20,8 @@ use Spatie\Permission\PermissionRegistrar;
 
 class AccessAdministrationService
 {
+    public function __construct(private readonly OrganizationHierarchyService $hierarchy) {}
+
     /**
      * @param  array<string, mixed>  $filters
      * @return LengthAwarePaginator<int, Organization>
@@ -75,6 +77,8 @@ class AccessAdministrationService
      */
     public function storeOrganization(array $data): Organization
     {
+        $this->hierarchy->validateOrganization($data);
+
         return DB::transaction(function () use ($data): Organization {
             $logoPath = $this->storeLogoFile($data, null);
 
@@ -96,6 +100,8 @@ class AccessAdministrationService
      */
     public function updateOrganization(Organization $organization, array $data): Organization
     {
+        $this->hierarchy->validateOrganization($data, $organization);
+
         return DB::transaction(function () use ($organization, $data): Organization {
             $logoPath = $this->storeLogoFile($data, $organization->logo_path);
 
@@ -127,6 +133,8 @@ class AccessAdministrationService
      */
     public function storeOrganizationUnit(array $data): OrganizationUnit
     {
+        $this->hierarchy->validateOrganizationUnit($data);
+
         return DB::transaction(function () use ($data): OrganizationUnit {
             $logoPath = $this->storeLogoFile($data, null);
 
@@ -152,6 +160,8 @@ class AccessAdministrationService
      */
     public function updateOrganizationUnit(OrganizationUnit $unit, array $data): OrganizationUnit
     {
+        $this->hierarchy->validateOrganizationUnit($data, $unit);
+
         return DB::transaction(function () use ($unit, $data): OrganizationUnit {
             $logoPath = $this->storeLogoFile($data, $unit->logo_path);
 
