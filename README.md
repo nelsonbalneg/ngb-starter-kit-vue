@@ -45,12 +45,12 @@ Seed data is configured in `config/starter-kit.php` and can be customized throug
 
 Default users:
 
-| Role | Email | Password |
-| --- | --- | --- |
+| Role        | Email                   | Password |
+| ----------- | ----------------------- | -------- |
 | super_admin | super_admin@example.com | password |
-| super_admin | admin@example.com | password |
-| user | user@example.com | password |
-| employee | employee@example.com | password |
+| super_admin | admin@example.com       | password |
+| user        | user@example.com        | password |
+| employee    | employee@example.com    | password |
 
 Change `STARTER_DEFAULT_PASSWORD` before seeding for shared environments.
 
@@ -113,4 +113,7 @@ Some legacy generated UI files may still need lint cleanup. New work should pass
 - Use named routes and Wayfinder helpers.
 - Use confirmation dialogs for deletes.
 - Use Inter, compact spacing, accessible controls, and enterprise-grade UI patterns.
-# ngb-starter-kit-vue
+
+## Using This As A Starter Kit
+
+See [STARTER_KIT_INSTRUCTIONS.md](STARTER_KIT_INSTRUCTIONS.md) for copy-paste setup instructions.
