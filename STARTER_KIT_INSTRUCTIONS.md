@@ -251,6 +251,15 @@ Temporary install command before Packagist has a stable tag:
 composer create-project --stability=dev --repository-url=https://github.com/nelsonbalneg/ngb-starter-kit-vue.git ngb/ngb-starter-kit-vue my-new-app dev-main
 ```
 
+If Packagist already lists the package but Composer says it cannot find it with stability `stable`, create and push a stable tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+composer clear-cache
+composer create-project ngb/ngb-starter-kit-vue my-new-app
+```
+
 Use `composer require` only for installable Laravel packages. Use `composer create-project` for this starter kit because it is a complete application skeleton.
 
 ## 11. Starter Kit Rules

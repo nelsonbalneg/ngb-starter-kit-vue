@@ -91,6 +91,8 @@ After Packagist crawls the repo and sees `v1.0.0`, this should work:
 composer create-project ngb/ngb-starter-kit-vue my-new-app
 ```
 
+If Composer says it cannot find the package with stability `stable`, Packagist does not have a stable tag yet. Use the temporary dev install command, or create and push a stable tag.
+
 Then:
 
 ```bash
@@ -110,10 +112,46 @@ Copy-Item .env.example .env
 
 ## Temporary Install Before Packagist Is Ready
 
-Use this while waiting for Packagist setup:
+Use this while waiting for Packagist setup or while the package only has `dev-main`:
 
 ```bash
 composer create-project --stability=dev --repository-url=https://github.com/nelsonbalneg/ngb-starter-kit-vue.git ngb/ngb-starter-kit-vue my-new-app dev-main
+```
+
+If the package is already visible on Packagist but has no stable tag yet, this shorter dev command can also work:
+
+```bash
+composer create-project --stability=dev ngb/ngb-starter-kit-vue my-new-app dev-main
+```
+
+## Fix Stability Stable Error
+
+Error:
+
+```text
+Could not find package ngb/ngb-starter-kit-vue with stability stable.
+```
+
+Cause:
+
+```text
+Packagist can see the package, but Composer cannot find a stable version such as v1.0.0.
+```
+
+Fix:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Then open the package page on Packagist and click **Update** if it does not crawl automatically.
+
+After Packagist shows version `v1.0.0`, run:
+
+```bash
+composer clear-cache
+composer create-project ngb/ngb-starter-kit-vue my-new-app
 ```
 
 ## Future Releases
