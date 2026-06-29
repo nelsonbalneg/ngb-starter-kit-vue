@@ -23,7 +23,14 @@ Enterprise starter kit for Laravel, Vue, Inertia, TypeScript, Tailwind CSS, Fort
 
 ## First Setup
 
-Create a new project from Packagist:
+Create a new project directly from GitHub while the package is not yet published on Packagist:
+
+```bash
+composer create-project --stability=dev --repository-url=https://github.com/nelsonbalneg/ngb-starter-kit-vue.git ngb/ngb-starter-kit-vue my-new-app dev-main
+cd my-new-app
+```
+
+After the package is published on Packagist with a stable tag, use:
 
 ```bash
 composer create-project ngb/ngb-starter-kit-vue my-new-app
@@ -124,3 +131,5 @@ Some legacy generated UI files may still need lint cleanup. New work should pass
 ## Using This As A Starter Kit
 
 See [STARTER_KIT_INSTRUCTIONS.md](STARTER_KIT_INSTRUCTIONS.md) for copy-paste setup instructions.
+
+See [PACKAGIST_PUBLISHING.md](PACKAGIST_PUBLISHING.md) for Packagist publishing steps.

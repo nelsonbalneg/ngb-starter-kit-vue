@@ -8,7 +8,14 @@ https://github.com/nelsonbalneg/ngb-starter-kit-vue
 
 ## 1. Create A New Project
 
-Recommended Packagist install:
+Works now, before Packagist is configured:
+
+```bash
+composer create-project --stability=dev --repository-url=https://github.com/nelsonbalneg/ngb-starter-kit-vue.git ngb/ngb-starter-kit-vue my-new-app dev-main
+cd my-new-app
+```
+
+Recommended Packagist install after the package is submitted to Packagist and tagged:
 
 ```bash
 composer create-project ngb/ngb-starter-kit-vue my-new-app
@@ -199,7 +206,30 @@ git push -u origin main
 
 ## 10. Publish Starter Kit Updates To Packagist
 
-When you update the starter kit itself:
+See [PACKAGIST_PUBLISHING.md](PACKAGIST_PUBLISHING.md) for the full Packagist setup guide.
+
+The plain `composer create-project ngb/ngb-starter-kit-vue my-new-app` command works only after Packagist can see the package and at least one stable version tag exists.
+
+First submit the GitHub repository to Packagist:
+
+```text
+https://github.com/nelsonbalneg/ngb-starter-kit-vue
+```
+
+Packagist package name:
+
+```text
+ngb/ngb-starter-kit-vue
+```
+
+Then tag a stable release:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+When you update the starter kit later:
 
 ```bash
 git add .
@@ -209,16 +239,16 @@ git push origin main
 git push origin v1.0.1
 ```
 
-Packagist package name:
-
-```text
-ngb/ngb-starter-kit-vue
-```
-
 Install command:
 
 ```bash
 composer create-project ngb/ngb-starter-kit-vue my-new-app
+```
+
+Temporary install command before Packagist has a stable tag:
+
+```bash
+composer create-project --stability=dev --repository-url=https://github.com/nelsonbalneg/ngb-starter-kit-vue.git ngb/ngb-starter-kit-vue my-new-app dev-main
 ```
 
 Use `composer require` only for installable Laravel packages. Use `composer create-project` for this starter kit because it is a complete application skeleton.
