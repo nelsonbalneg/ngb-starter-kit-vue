@@ -26,7 +26,7 @@ Enterprise starter kit for Laravel, Vue, Inertia, TypeScript, Tailwind CSS, Fort
 Create a new project from Packagist:
 
 ```bash
-composer create-project nelsonbalneg/ngb-starter-kit-vue my-new-app
+composer create-project ngb/ngb-starter-kit-vue my-new-app
 cd my-new-app
 ```
 

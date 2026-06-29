@@ -3,7 +3,7 @@
 Use this guide when creating a new Laravel/Vue project from:
 
 ```text
-https://github.com/nelsonbalneg/ngb-starter-kit-vue
+https://github.com/ngb/ngb-starter-kit-vue
 ```
 
 ## 1. Create A New Project
@@ -11,14 +11,14 @@ https://github.com/nelsonbalneg/ngb-starter-kit-vue
 Recommended Packagist install:
 
 ```bash
-composer create-project nelsonbalneg/ngb-starter-kit-vue my-new-app
+composer create-project ngb/ngb-starter-kit-vue my-new-app
 cd my-new-app
 ```
 
 Alternative GitHub clone:
 
 ```bash
-git clone https://github.com/nelsonbalneg/ngb-starter-kit-vue.git my-new-app
+git clone https://github.com/ngb/ngb-starter-kit-vue.git my-new-app
 cd my-new-app
 ```
 
@@ -212,13 +212,13 @@ git push origin v1.0.1
 Packagist package name:
 
 ```text
-nelsonbalneg/ngb-starter-kit-vue
+ngb/ngb-starter-kit-vue
 ```
 
 Install command:
 
 ```bash
-composer create-project nelsonbalneg/ngb-starter-kit-vue my-new-app
+composer create-project ngb/ngb-starter-kit-vue my-new-app
 ```
 
 Use `composer require` only for installable Laravel packages. Use `composer create-project` for this starter kit because it is a complete application skeleton.
