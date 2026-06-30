@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Models\OrganizationUnit;
 use App\Models\User;
 use App\Services\SiteAdministration\AccessAdministrationService;
+use App\Services\SiteAdministration\ModuleActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,10 @@ use Inertia\Response;
 
 class OrganizationController extends Controller
 {
-    public function __construct(private readonly AccessAdministrationService $service) {}
+    public function __construct(
+        private readonly AccessAdministrationService $service,
+        private readonly ModuleActivityLogger $activity,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -39,6 +43,7 @@ class OrganizationController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'organization_id']),
             'filters' => $request->only(['search', 'status']),
+            'activities' => $this->activity->latestForModule('organizations'),
         ]);
     }
 

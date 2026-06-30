@@ -20,7 +20,14 @@ use Spatie\Permission\PermissionRegistrar;
 
 class AccessAdministrationService
 {
-    public function __construct(private readonly OrganizationHierarchyService $hierarchy) {}
+    private const AUTHENTICATION_MODULE = 'authentication';
+
+    private const ORGANIZATIONS_MODULE = 'organizations';
+
+    public function __construct(
+        private readonly OrganizationHierarchyService $hierarchy,
+        private readonly ModuleActivityLogger $activity,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $filters
@@ -82,7 +89,7 @@ class AccessAdministrationService
         return DB::transaction(function () use ($data): Organization {
             $logoPath = $this->storeLogoFile($data, null);
 
-            return Organization::create([
+            $organization = Organization::create([
                 'name' => $data['name'],
                 'parent_id' => $data['parent_id'] ?? null,
                 'type' => $data['type'] ?? 'campus',
@@ -92,6 +99,16 @@ class AccessAdministrationService
                 'address' => $data['address'] ?? null,
                 'is_active' => (bool) ($data['is_active'] ?? true),
             ]);
+
+            $this->activity->record(
+                self::ORGANIZATIONS_MODULE,
+                'organization.created',
+                "Created organization {$organization->name}.",
+                $organization,
+                ['type' => $organization->type],
+            );
+
+            return $organization;
         });
     }
 
@@ -116,6 +133,14 @@ class AccessAdministrationService
                 'is_active' => (bool) ($data['is_active'] ?? true),
             ]);
 
+            $this->activity->record(
+                self::ORGANIZATIONS_MODULE,
+                'organization.updated',
+                "Updated organization {$organization->name}.",
+                $organization,
+                ['type' => $organization->type],
+            );
+
             return $organization;
         });
     }
@@ -123,8 +148,19 @@ class AccessAdministrationService
     public function deleteOrganization(Organization $organization): void
     {
         DB::transaction(function () use ($organization): void {
+            $organizationName = $organization->name;
+            $organizationType = $organization->type;
+
             $this->deleteLogoFile($organization->logo_path);
             $organization->delete();
+
+            $this->activity->record(
+                self::ORGANIZATIONS_MODULE,
+                'organization.deleted',
+                "Deleted organization {$organizationName}.",
+                null,
+                ['type' => $organizationType],
+            );
         });
     }
 
@@ -150,6 +186,17 @@ class AccessAdministrationService
             ]);
 
             $unit->heads()->sync($data['head_user_ids'] ?? []);
+
+            $this->activity->record(
+                self::ORGANIZATIONS_MODULE,
+                'unit.created',
+                "Created {$unit->type} {$unit->name}.",
+                $unit,
+                [
+                    'type' => $unit->type,
+                    'organization_id' => $unit->organization_id,
+                ],
+            );
 
             return $unit;
         });
@@ -178,6 +225,17 @@ class AccessAdministrationService
 
             $unit->heads()->sync($data['head_user_ids'] ?? []);
 
+            $this->activity->record(
+                self::ORGANIZATIONS_MODULE,
+                'unit.updated',
+                "Updated {$unit->type} {$unit->name}.",
+                $unit,
+                [
+                    'type' => $unit->type,
+                    'organization_id' => $unit->organization_id,
+                ],
+            );
+
             return $unit;
         });
     }
@@ -185,8 +243,23 @@ class AccessAdministrationService
     public function deleteOrganizationUnit(OrganizationUnit $unit): void
     {
         DB::transaction(function () use ($unit): void {
+            $unitName = $unit->name;
+            $unitType = $unit->type;
+            $organizationId = $unit->organization_id;
+
             $this->deleteLogoFile($unit->logo_path);
             $unit->delete();
+
+            $this->activity->record(
+                self::ORGANIZATIONS_MODULE,
+                'unit.deleted',
+                "Deleted {$unitType} {$unitName}.",
+                null,
+                [
+                    'type' => $unitType,
+                    'organization_id' => $organizationId,
+                ],
+            );
         });
     }
 
@@ -260,6 +333,14 @@ class AccessAdministrationService
             ]);
             $role->save();
 
+            $this->activity->record(
+                self::AUTHENTICATION_MODULE,
+                'role.created',
+                "Created role {$role->name}.",
+                $role,
+                ['organization_id' => $organizationId],
+            );
+
             return $role;
         });
     }
@@ -275,13 +356,29 @@ class AccessAdministrationService
                 'description' => $data['description'] ?? null,
             ]);
 
+            $this->activity->record(
+                self::AUTHENTICATION_MODULE,
+                'role.updated',
+                "Updated role {$role->name}.",
+                $role,
+            );
+
             return $role;
         });
     }
 
     public function deleteRole(Role $role): void
     {
-        DB::transaction(fn () => $role->delete());
+        DB::transaction(function () use ($role): void {
+            $roleName = $role->name;
+            $role->delete();
+
+            $this->activity->record(
+                self::AUTHENTICATION_MODULE,
+                'role.deleted',
+                "Deleted role {$roleName}.",
+            );
+        });
     }
 
     /**
@@ -317,6 +414,14 @@ class AccessAdministrationService
             ]);
             $permission->save();
 
+            $this->activity->record(
+                self::AUTHENTICATION_MODULE,
+                'permission.created',
+                "Created permission {$permission->name}.",
+                $permission,
+                ['group' => $permission->getAttribute('group')],
+            );
+
             return $permission;
         });
     }
@@ -333,13 +438,30 @@ class AccessAdministrationService
                 'description' => $data['description'] ?? null,
             ]);
 
+            $this->activity->record(
+                self::AUTHENTICATION_MODULE,
+                'permission.updated',
+                "Updated permission {$permission->name}.",
+                $permission,
+                ['group' => $permission->getAttribute('group')],
+            );
+
             return $permission;
         });
     }
 
     public function deletePermission(Permission $permission): void
     {
-        DB::transaction(fn () => $permission->delete());
+        DB::transaction(function () use ($permission): void {
+            $permissionName = $permission->name;
+            $permission->delete();
+
+            $this->activity->record(
+                self::AUTHENTICATION_MODULE,
+                'permission.deleted',
+                "Deleted permission {$permissionName}.",
+            );
+        });
     }
 
     /**
@@ -382,6 +504,14 @@ class AccessAdministrationService
         DB::transaction(function () use ($role, $permissionIds): void {
             app(PermissionRegistrar::class)->setPermissionsTeamId((int) $role->getAttribute('team_id'));
             $role->syncPermissions(Permission::query()->whereIn('id', $permissionIds)->pluck('name')->all());
+
+            $this->activity->record(
+                self::AUTHENTICATION_MODULE,
+                'role.permissions.updated',
+                "Updated permissions for role {$role->name}.",
+                $role,
+                ['permission_count' => count($permissionIds)],
+            );
         });
     }
 
@@ -433,6 +563,14 @@ class AccessAdministrationService
 
             $this->syncUserOrganizations($user, $data['organization_ids'] ?? []);
 
+            $this->activity->record(
+                self::AUTHENTICATION_MODULE,
+                'user.created',
+                "Created user {$user->name}.",
+                $user,
+                ['email' => $user->email],
+            );
+
             return $user;
         });
     }
@@ -459,6 +597,14 @@ class AccessAdministrationService
 
             $this->syncUserOrganizations($user, $data['organization_ids'] ?? []);
 
+            $this->activity->record(
+                self::AUTHENTICATION_MODULE,
+                'user.updated',
+                "Updated user {$user->name}.",
+                $user,
+                ['email' => $user->email],
+            );
+
             return $user;
         });
     }
@@ -467,32 +613,81 @@ class AccessAdministrationService
     {
         DB::transaction(function () use ($user): void {
             $photoPath = $user->profile_photo_path;
+            $userName = $user->name;
+            $userEmail = $user->email;
 
             $user->organizations()->detach();
             $user->delete();
 
             $this->deleteUserPhoto($photoPath);
+
+            $this->activity->record(
+                self::AUTHENTICATION_MODULE,
+                'user.deleted',
+                "Deleted user {$userName}.",
+                null,
+                ['email' => $userEmail],
+            );
         });
     }
 
-    public function lockUser(User $user): void
+    public function lockUser(User $user, string $reason): void
     {
-        $user->forceFill(['locked_at' => now()])->save();
+        $user->forceFill([
+            'locked_at' => now(),
+            'locked_reason' => $reason,
+        ])->save();
+
+        $this->activity->record(
+            self::AUTHENTICATION_MODULE,
+            'user.locked',
+            "Locked user {$user->name}.",
+            $user,
+            ['reason' => $reason],
+        );
     }
 
     public function unlockUser(User $user): void
     {
-        $user->forceFill(['locked_at' => null, 'is_active' => true])->save();
+        $previousReason = $user->locked_reason;
+
+        $user->forceFill([
+            'locked_at' => null,
+            'locked_reason' => null,
+            'is_active' => true,
+        ])->save();
+
+        $this->activity->record(
+            self::AUTHENTICATION_MODULE,
+            'user.unlocked',
+            "Unlocked user {$user->name}.",
+            $user,
+            ['previous_reason' => $previousReason],
+        );
     }
 
     public function resetPassword(User $user): void
     {
         $user->forceFill(['password' => Hash::make(Str::password(32))])->save();
+
+        $this->activity->record(
+            self::AUTHENTICATION_MODULE,
+            'user.password.reset',
+            "Reset password for {$user->name}.",
+            $user,
+        );
     }
 
     public function changePassword(User $user, string $password): void
     {
         $user->forceFill(['password' => Hash::make($password)])->save();
+
+        $this->activity->record(
+            self::AUTHENTICATION_MODULE,
+            'user.password.changed',
+            "Changed password for {$user->name}.",
+            $user,
+        );
     }
 
     /**
@@ -545,6 +740,18 @@ class AccessAdministrationService
                     ]);
                 }
             }
+
+            $this->activity->record(
+                self::AUTHENTICATION_MODULE,
+                'user.access.updated',
+                "Updated access for {$user->name}.",
+                $user,
+                [
+                    'organization_id' => $organizationId,
+                    'role_count' => count($roleNames),
+                    'permission_count' => count($permissionNames),
+                ],
+            );
         });
     }
 

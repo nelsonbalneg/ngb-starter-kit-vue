@@ -5,12 +5,15 @@ namespace App\Providers;
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Http\Responses\Auth\SsoLogoutResponse;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Contracts\LogoutResponse;
 use Laravel\Fortify\Features;
@@ -43,6 +46,35 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+        Fortify::authenticateUsing(fn (Request $request): ?User => $this->authenticateUser($request));
+    }
+
+    private function authenticateUser(Request $request): ?User
+    {
+        $email = $request->string(Fortify::username())->toString();
+        $password = $request->string('password')->toString();
+
+        $user = User::query()
+            ->where(Fortify::username(), $email)
+            ->first();
+
+        if (! $user instanceof User || ! Hash::check($password, $user->password)) {
+            return null;
+        }
+
+        if ($user->locked_at !== null) {
+            throw ValidationException::withMessages([
+                Fortify::username() => $user->lockedOutMessage(),
+            ]);
+        }
+
+        if (! $user->is_active) {
+            throw ValidationException::withMessages([
+                Fortify::username() => 'This account is inactive. Please contact an administrator for assistance.',
+            ]);
+        }
+
+        return $user;
     }
 
     /**

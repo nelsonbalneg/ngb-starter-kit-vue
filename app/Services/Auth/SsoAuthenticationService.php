@@ -99,8 +99,6 @@ class SsoAuthenticationService
                 'sso_id' => $ssoId,
                 'name' => $this->stringValue($profile, ['name', 'full_name']) ?? $email,
                 'email' => $email,
-                'is_active' => true,
-                'locked_at' => null,
             ];
 
             if ($user) {
@@ -108,6 +106,8 @@ class SsoAuthenticationService
             } else {
                 $user = User::query()->create([
                     ...$attributes,
+                    'is_active' => true,
+                    'locked_at' => null,
                     'password' => Hash::make(Str::password(48)),
                 ]);
             }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SiteAdministration;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SiteAdministration\ChangeUserPasswordRequest;
 use App\Http\Requests\SiteAdministration\InviteUserRequest;
+use App\Http\Requests\SiteAdministration\LockUserRequest;
 use App\Http\Requests\SiteAdministration\UpdateUserRequest;
 use App\Models\Organization;
 use App\Models\User;
@@ -82,11 +83,13 @@ class UserAdministrationController extends Controller
             ->with('success', 'User password reset successfully.');
     }
 
-    public function lock(User $user): RedirectResponse
+    public function lock(LockUserRequest $request, User $user): RedirectResponse
     {
         Gate::authorize('users.lock');
 
-        $this->service->lockUser($user);
+        $validated = $request->validated();
+
+        $this->service->lockUser($user, (string) $validated['locked_reason']);
 
         return $this->redirectToAuthenticationUsers()
             ->with('success', 'User account locked successfully.');

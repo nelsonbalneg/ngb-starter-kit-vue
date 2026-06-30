@@ -32,10 +32,13 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
+ * @property bool $is_active
+ * @property Carbon|null $locked_at
+ * @property string|null $locked_reason
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['uuid', 'sso_id', 'name', 'email', 'password', 'profile_photo_path', 'is_active', 'locked_at'])]
+#[Fillable(['uuid', 'sso_id', 'name', 'email', 'password', 'profile_photo_path', 'is_active', 'locked_at', 'locked_reason'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -69,6 +72,17 @@ class User extends Authenticatable implements PasskeyUser
         return $this->profile_photo_path
             ? Storage::disk('public')->url($this->profile_photo_path)
             : null;
+    }
+
+    public function lockedOutMessage(): string
+    {
+        $message = 'This account is locked.';
+
+        if ($this->locked_reason) {
+            $message .= ' Reason: '.$this->locked_reason;
+        }
+
+        return $message.' Please contact an administrator for assistance.';
     }
 
     /**

@@ -108,6 +108,28 @@ class SsoController extends Controller
                 ->with('status', 'Unable to complete SSO login. Please try again.');
         }
 
+        if ($user->locked_at !== null) {
+            Log::warning('SSO login rejected because account is locked.', [
+                'user_id' => $user->id,
+                'user_uuid' => $user->uuid,
+                'host' => $request->getHost(),
+            ]);
+
+            return to_route('login')
+                ->with('status', $user->lockedOutMessage());
+        }
+
+        if (! $user->is_active) {
+            Log::warning('SSO login rejected because account is inactive.', [
+                'user_id' => $user->id,
+                'user_uuid' => $user->uuid,
+                'host' => $request->getHost(),
+            ]);
+
+            return to_route('login')
+                ->with('status', 'This account is inactive. Please contact an administrator for assistance.');
+        }
+
         Auth::login($user);
         $request->session()->regenerate();
 

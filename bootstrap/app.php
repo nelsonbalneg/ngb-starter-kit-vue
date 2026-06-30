@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureActiveSessionAccount;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetOrganizationPermissionContext;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             HandleAppearance::class,
+            EnsureActiveSessionAccount::class,
             SetOrganizationPermissionContext::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

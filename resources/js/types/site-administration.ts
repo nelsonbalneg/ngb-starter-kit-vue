@@ -63,9 +63,29 @@ export type AdminUser = {
     avatar: string | null;
     is_active: boolean;
     locked_at: string | null;
+    locked_reason: string | null;
     organizations: Organization[];
     roles?: Role[];
     permissions?: Permission[];
+};
+
+export type ModuleActivity = {
+    id: number;
+    module: string;
+    action: string;
+    description: string;
+    causer: Pick<AdminUser, 'id' | 'name' | 'email'> | null;
+    metadata: Record<string, unknown>;
+    created_at: string | null;
+    created_at_human: string | null;
+    created_on: string | null;
+    created_time: string | null;
+};
+
+export type ModuleActivityPage = {
+    data: ModuleActivity[];
+    next_cursor: string | null;
+    per_page: number;
 };
 
 export type Lookup = {

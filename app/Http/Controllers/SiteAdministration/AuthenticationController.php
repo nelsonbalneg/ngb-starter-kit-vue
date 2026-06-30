@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SiteAdministration;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Services\SiteAdministration\AccessAdministrationService;
+use App\Services\SiteAdministration\ModuleActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -13,7 +14,10 @@ use Spatie\Permission\Models\Permission;
 
 class AuthenticationController extends Controller
 {
-    public function __construct(private readonly AccessAdministrationService $service) {}
+    public function __construct(
+        private readonly AccessAdministrationService $service,
+        private readonly ModuleActivityLogger $activity,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -27,6 +31,7 @@ class AuthenticationController extends Controller
             'activeTab' => $activeTab,
             'tabs' => $this->tabs(),
             'filters' => $request->only(['search', 'organization_id', 'status', 'group', 'role_id']),
+            'activities' => $this->activity->latestForModule('authentication'),
             'payload' => $this->payload($request, $activeTab),
         ]);
     }

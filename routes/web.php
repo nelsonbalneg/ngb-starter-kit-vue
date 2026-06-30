@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\SsoController;
 use App\Http\Controllers\SiteAdministration\AuthenticationController;
 use App\Http\Controllers\SiteAdministration\LookupController;
+use App\Http\Controllers\SiteAdministration\ModuleActivityLogController;
 use App\Http\Controllers\SiteAdministration\OrganizationController;
 use App\Http\Controllers\SiteAdministration\PermissionController;
 use App\Http\Controllers\SiteAdministration\RoleController;
@@ -32,6 +33,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::get('authentication', [AuthenticationController::class, 'index'])
                 ->name('authentication.index');
+
+            Route::get('activity-logs/{module}', [ModuleActivityLogController::class, 'index'])
+                ->name('activity-logs.index');
 
             Route::get('organizations/users/search', [OrganizationController::class, 'searchUsers'])
                 ->name('organizations.users.search');
