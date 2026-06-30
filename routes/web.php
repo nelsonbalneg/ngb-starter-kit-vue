@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\SsoController;
+use App\Http\Controllers\SsoFeaturesController;
+use App\Http\Controllers\SsoMaintenanceController;
+use App\Http\Controllers\SsoUserAccessController;
 use App\Http\Controllers\SiteAdministration\AuthenticationController;
 use App\Http\Controllers\SiteAdministration\LookupController;
 use App\Http\Controllers\SiteAdministration\ModuleActivityLogController;
@@ -13,6 +16,10 @@ use App\Http\Controllers\SiteAdministration\UserAccessController;
 use App\Http\Controllers\SiteAdministration\UserAdministrationController;
 use App\Http\Controllers\SiteAdministration\UserImpersonationController;
 use Illuminate\Support\Facades\Route;
+
+Route::match(['get', 'post'], 'api/sso-features', [SsoFeaturesController::class, 'handle'])->name('api.sso-features');
+Route::match(['get', 'post'], 'api/sso-maintenance', [SsoMaintenanceController::class, 'handle']);
+Route::match(['get', 'post'], 'api/sso-user-access', [SsoUserAccessController::class, 'handle'])->name('api.sso-user-access');
 
 Route::inertia('/', 'Welcome')->name('home');
 

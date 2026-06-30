@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureActiveSessionAccount;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetOrganizationPermissionContext;
+use App\Http\Middleware\CheckFeatureAvailability;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->preventRequestsDuringMaintenance(except: [
+            'api/sso-features',
+            'api/sso-maintenance',
+            'api/sso-user-access',
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'api/sso-features',
+            'api/sso-maintenance',
+            'api/sso-user-access',
+        ]);
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->redirectGuestsTo(
@@ -31,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             SetOrganizationPermissionContext::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            CheckFeatureAvailability::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

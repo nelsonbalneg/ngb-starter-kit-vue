@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'sso' => [
+        'base_url' => env('SSO_BASE_URL', 'http://127.0.0.1:8000'),
+        'user_url' => env('SSO_USER_URL'),
+        'client_id' => env('SSO_CLIENT_ID'),
+        'client_secret' => env('SSO_CLIENT_SECRET'),
+        'maintenance_secret' => env('SSO_MAINTENANCE_SECRET'),
+        'redirect_uri' => env('SSO_REDIRECT_URI', env('APP_URL').'/auth/callback'),
+        'logout_redirect_uri' => env('SSO_LOGOUT_REDIRECT_URI'),
+    ],
+
 ];
