@@ -168,6 +168,7 @@
     }
     body {
         @apply bg-background text-[13px] leading-snug text-foreground;
+        font-family: var(--app-font-family, var(--font-sans));
     }
 
     input,
@@ -175,5 +176,144 @@
     textarea,
     button {
         @apply text-[13px];
+    }
+}
+
+@layer base {
+    :root {
+        --app-accent-color: #2563eb;
+        --app-card-radius: 8px;
+        --app-font-family:
+            Inter, ui-sans-serif, system-ui, sans-serif;
+        --app-transition-speed: 200ms;
+        --app-card-shadow: 0 1px 3px rgb(15 23 42 / 0.1);
+    }
+
+    html.font-size-small {
+        font-size: 14px;
+    }
+
+    html.font-size-medium {
+        font-size: 16px;
+    }
+
+    html.font-size-large,
+    html.large-text {
+        font-size: 17px;
+    }
+
+    html.animations-enabled *,
+    body.animations-enabled * {
+        transition-duration: var(--app-transition-speed);
+    }
+
+    html.animations-disabled *,
+    body.animations-disabled *,
+    html.reduce-motion *,
+    body.reduce-motion * {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+    }
+
+    html.high-contrast {
+        --border: color-mix(in srgb, var(--foreground) 32%, transparent);
+        --muted-foreground: color-mix(in srgb, var(--foreground) 78%, transparent);
+        --ring: var(--foreground);
+    }
+
+    html.sidebar-light:not(.dark) {
+        --sidebar-background: hsl(0 0% 98%);
+        --sidebar-foreground: hsl(240 5.3% 26.1%);
+        --sidebar-accent: hsl(0 0% 94%);
+        --sidebar-accent-foreground: hsl(0 0% 30%);
+        --sidebar-border: hsl(0 0% 91%);
+    }
+
+    html.sidebar-dark {
+        --sidebar-background: hsl(222 47% 8%);
+        --sidebar-foreground: hsl(210 40% 96%);
+        --sidebar-accent: hsl(222 47% 14%);
+        --sidebar-accent-foreground: hsl(210 40% 98%);
+        --sidebar-border: hsl(222 32% 18%);
+    }
+
+    html.density-compact body {
+        @apply text-[12px];
+    }
+
+    html.density-comfortable body {
+        @apply text-[13px];
+    }
+
+    html.density-spacious body {
+        @apply text-[14px];
+    }
+
+    html.density-compact input,
+    html.density-compact select,
+    html.density-compact textarea,
+    html.density-compact button {
+        @apply text-[12px];
+    }
+
+    html.density-spacious input,
+    html.density-spacious select,
+    html.density-spacious textarea,
+    html.density-spacious button {
+        @apply text-[14px];
+    }
+}
+
+@layer components {
+    html.content-fixed [data-slot='sidebar-inset'] > div,
+    html.content-fixed main:not([data-slot='sidebar-inset']) > div {
+        margin-left: auto;
+        margin-right: auto;
+        width: min(100%, 1280px);
+    }
+
+    html.content-full [data-slot='sidebar-inset'] > div,
+    html.content-full main:not([data-slot='sidebar-inset']) > div {
+        width: 100%;
+    }
+
+    html.card-shadow-none [data-slot='card'],
+    html.card-shadow-none .rounded-lg.border.bg-card,
+    html.card-flat [data-slot='card'],
+    html.card-flat .rounded-lg.border.bg-card {
+        box-shadow: none !important;
+    }
+
+    html.card-shadow-small [data-slot='card'],
+    html.card-shadow-small .rounded-lg.border.bg-card,
+    html.card-shadow-medium [data-slot='card'],
+    html.card-shadow-medium .rounded-lg.border.bg-card,
+    html.card-shadow-large [data-slot='card'],
+    html.card-shadow-large .rounded-lg.border.bg-card {
+        box-shadow: var(--app-card-shadow);
+    }
+
+    html [data-slot='card'],
+    html .rounded-lg.border.bg-card {
+        border-radius: var(--app-card-radius);
+    }
+
+    html.table-dense table th,
+    html.table-dense table td {
+        padding-top: 0.375rem;
+        padding-bottom: 0.375rem;
+    }
+
+    html.table-sticky table thead {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: var(--background);
+    }
+
+    html.table-zebra table tbody tr:nth-child(even) {
+        background: color-mix(in srgb, var(--muted) 45%, transparent);
     }
 }

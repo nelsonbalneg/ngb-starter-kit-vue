@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SiteAdministration;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SiteAdministration\AppearanceSettingsRequest;
 use App\Http\Requests\SiteAdministration\SiteSettingRequest;
 use App\Models\SiteSetting;
 use App\Services\SiteAdministration\SiteSettingAdministrationService;
@@ -67,6 +68,16 @@ class SiteSettingController extends Controller
 
         return to_route('site-administration.settings.index')
             ->with('success', 'Maintenance settings updated successfully.');
+    }
+
+    public function updateAppearance(AppearanceSettingsRequest $request): RedirectResponse
+    {
+        Gate::authorize('settings.update');
+
+        $this->service->updateAppearance($request->validated());
+
+        return to_route('site-administration.settings.index', ['tab' => 'appearance'])
+            ->with('success', 'Appearance settings updated successfully.');
     }
 
     public function store(SiteSettingRequest $request): RedirectResponse

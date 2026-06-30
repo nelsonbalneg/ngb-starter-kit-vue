@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\SiteAdministration\SiteSettingAdministrationService;
+use App\Services\SiteAdministration\UserImpersonationService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -44,6 +45,9 @@ class HandleInertiaRequests extends Middleware
             'branding' => cache()->remember('site_branding_settings', 3600, function () {
                 return app(SiteSettingAdministrationService::class)->allGrouped()['branding'];
             }),
+            'appearance' => cache()->remember('site_appearance_settings', 3600, function () {
+                return app(SiteSettingAdministrationService::class)->allGrouped()['appearance'];
+            }),
             'auth' => [
                 'user' => $request->user(),
                 'currentOrganization' => $request->user()
@@ -55,14 +59,44 @@ class HandleInertiaRequests extends Middleware
                     ? $this->sharedPermissions($request)
                     : [],
             ],
+            'impersonation' => $this->impersonation($request),
             'flash' => [
                 'toast' => $request->session()->get('toast')
                     ?? ($request->session()->has('success')
                         ? ['type' => 'success', 'message' => $request->session()->get('success')]
                         : null),
             ],
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'sidebarOpen' => $this->sidebarOpen($request),
         ];
+    }
+
+    /**
+     * @return array{is_impersonating: bool, impersonated_user_name: string|null, reference_number: string|null}
+     */
+    private function impersonation(Request $request): array
+    {
+        $isImpersonating = app(UserImpersonationService::class)->isImpersonating($request);
+
+        return [
+            'is_impersonating' => $isImpersonating,
+            'impersonated_user_name' => $isImpersonating ? $request->user()?->name : null,
+            'reference_number' => $isImpersonating
+                ? $request->session()->get(UserImpersonationService::SESSION_REFERENCE)
+                : null,
+        ];
+    }
+
+    private function sidebarOpen(Request $request): bool
+    {
+        if ($request->hasCookie('sidebar_state')) {
+            return $request->cookie('sidebar_state') === 'true';
+        }
+
+        $appearance = cache()->remember('site_appearance_settings', 3600, function () {
+            return app(SiteSettingAdministrationService::class)->allGrouped()['appearance'];
+        });
+
+        return ($appearance['sidebar_default'] ?? 'expanded') !== 'collapsed';
     }
 
     /**
@@ -88,6 +122,11 @@ class HandleInertiaRequests extends Middleware
             'users.update',
             'users.delete',
             'users.change-password',
+            'users.reset-password',
+            'users.lock',
+            'users.unlock',
+            'users.impersonate',
+            'users.impersonate.privileged',
             'lookups.view',
             'settings.view',
             'settings.create',

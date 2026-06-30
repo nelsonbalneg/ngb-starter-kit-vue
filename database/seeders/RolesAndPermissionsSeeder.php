@@ -78,6 +78,8 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'users.reset-password', 'group' => 'Users'],
             ['name' => 'users.lock', 'group' => 'Users'],
             ['name' => 'users.unlock', 'group' => 'Users'],
+            ['name' => 'users.impersonate', 'group' => 'Users'],
+            ['name' => 'users.impersonate.privileged', 'group' => 'Users'],
             ['name' => 'lookups.view', 'group' => 'Lookups'],
             ['name' => 'lookups.create', 'group' => 'Lookups'],
             ['name' => 'lookups.update', 'group' => 'Lookups'],

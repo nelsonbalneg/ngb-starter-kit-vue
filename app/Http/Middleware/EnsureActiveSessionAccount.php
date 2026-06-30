@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\SiteAdministration\UserImpersonationService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +29,19 @@ class EnsureActiveSessionAccount
 
         if ($message === null) {
             return $next($request);
+        }
+
+        $impersonation = app(UserImpersonationService::class);
+
+        if ($impersonation->isImpersonating($request)) {
+            $impersonation->stop($request);
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 403);
+            }
+
+            return to_route('site-administration.authentication.index', ['tab' => 'users'])
+                ->with('status', $message);
         }
 
         Auth::guard()->logout();

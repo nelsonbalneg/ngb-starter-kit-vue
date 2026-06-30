@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from '@lucide/vue';
+import {
+    BadgeCheck,
+    Building2,
+    ChevronDown,
+    Cog,
+    LayoutGrid,
+    ListTree,
+    Menu,
+    Settings,
+} from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
@@ -10,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -25,17 +35,14 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
-import { toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
+import authentication from '@/routes/site-administration/authentication';
+import lookups from '@/routes/site-administration/lookups';
+import organizations from '@/routes/site-administration/organizations';
+import settings from '@/routes/site-administration/settings';
 import type { BreadcrumbItem, NavItem } from '@/types';
 
 type Props = {
@@ -59,20 +66,58 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    {
+        title: 'Site Administration',
+        href: organizations.index(),
+        icon: Cog,
+        permission: 'site-administration.view',
+        children: [
+            {
+                title: 'Organizations',
+                href: organizations.index(),
+                icon: Building2,
+                permission: 'access.organizations.view',
+            },
+            {
+                title: 'Authentication',
+                href: authentication.index(),
+                icon: BadgeCheck,
+                permission: 'authentication.view',
+            },
+            {
+                title: 'Lookups',
+                href: lookups.index(),
+                icon: ListTree,
+                permission: 'lookups.view',
+            },
+            {
+                title: 'Site Settings',
+                href: settings.index(),
+                icon: Settings,
+                permission: 'settings.view',
+            },
+        ],
+    },
 ];
 
-const rightNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
+const canAccess = (item: NavItem): boolean => {
+    if (item.children?.length) {
+        return item.children.some(canAccess);
+    }
+
+    return (
+        !item.permission ||
+        page.props.auth.permissions[item.permission] === true
+    );
+};
+
+const visibleItems = computed(() => mainNavItems.filter(canAccess));
+
+const visibleChildren = (item: NavItem): NavItem[] =>
+    item.children?.filter(canAccess) ?? [];
+
+const isItemActive = (item: NavItem): boolean =>
+    isCurrentUrl(item.href) || item.children?.some(isItemActive) === true;
 </script>
 
 <template>
@@ -105,7 +150,7 @@ const rightNavItems: NavItem[] = [
                             >
                                 <nav class="-mx-2 space-y-0.5">
                                     <Link
-                                        v-for="item in mainNavItems"
+                                        v-for="item in visibleItems"
                                         :key="item.title"
                                         :href="item.href"
                                         class="flex items-center gap-x-2 rounded-md px-2 py-1.5 text-[13px] font-medium hover:bg-accent"
@@ -123,24 +168,41 @@ const rightNavItems: NavItem[] = [
                                         />
                                         {{ item.title }}
                                     </Link>
-                                </nav>
-                                <div class="flex flex-col space-y-2">
-                                    <a
-                                        v-for="item in rightNavItems"
-                                        :key="item.title"
-                                        :href="toUrl(item.href)"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        class="flex items-center space-x-1.5 text-[13px] font-medium"
+
+                                    <template
+                                        v-for="item in visibleItems.filter(
+                                            (entry) => entry.children?.length,
+                                        )"
+                                        :key="`${item.title}-children`"
                                     >
-                                        <component
-                                            v-if="item.icon"
-                                            :is="item.icon"
-                                            class="h-4 w-4"
-                                        />
-                                        <span>{{ item.title }}</span>
-                                    </a>
-                                </div>
+                                        <p
+                                            class="px-2 pt-3 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                                        >
+                                            {{ item.title }}
+                                        </p>
+                                        <Link
+                                            v-for="child in visibleChildren(
+                                                item,
+                                            )"
+                                            :key="child.title"
+                                            :href="child.href"
+                                            class="flex items-center gap-x-2 rounded-md px-2 py-1.5 text-[13px] font-medium hover:bg-accent"
+                                            :class="
+                                                whenCurrentUrl(
+                                                    child.href,
+                                                    activeItemStyles,
+                                                )
+                                            "
+                                        >
+                                            <component
+                                                v-if="child.icon"
+                                                :is="child.icon"
+                                                class="h-4 w-4"
+                                            />
+                                            {{ child.title }}
+                                        </Link>
+                                    </template>
+                                </nav>
                             </div>
                         </SheetContent>
                     </Sheet>
@@ -157,17 +219,62 @@ const rightNavItems: NavItem[] = [
                             class="flex h-full items-stretch space-x-1"
                         >
                             <NavigationMenuItem
-                                v-for="(item, index) in mainNavItems"
+                                v-for="(item, index) in visibleItems"
                                 :key="index"
                                 class="relative flex h-full items-center"
                             >
+                                <DropdownMenu v-if="item.children?.length">
+                                    <DropdownMenuTrigger as-child>
+                                        <button
+                                            type="button"
+                                            :class="[
+                                                navigationMenuTriggerStyle(),
+                                                isItemActive(item)
+                                                    ? activeItemStyles
+                                                    : null,
+                                                'h-8 cursor-pointer px-2.5 text-[13px]',
+                                            ]"
+                                        >
+                                            <component
+                                                v-if="item.icon"
+                                                :is="item.icon"
+                                                class="mr-1.5 h-3.5 w-3.5"
+                                            />
+                                            {{ item.title }}
+                                            <ChevronDown
+                                                class="ml-1 h-3.5 w-3.5 opacity-70"
+                                            />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                        align="start"
+                                        class="w-52"
+                                    >
+                                        <DropdownMenuItem
+                                            v-for="child in visibleChildren(
+                                                item,
+                                            )"
+                                            :key="child.title"
+                                            as-child
+                                        >
+                                            <Link :href="child.href">
+                                                <component
+                                                    v-if="child.icon"
+                                                    :is="child.icon"
+                                                />
+                                                {{ child.title }}
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+
                                 <Link
+                                    v-else
                                     :class="[
                                         navigationMenuTriggerStyle(),
-                                        whenCurrentUrl(
-                                            item.href,
-                                            activeItemStyles,
-                                        ),
+                                        isItemActive(item)
+                                            ? activeItemStyles
+                                            : null,
                                         'h-8 cursor-pointer px-2.5 text-[13px]',
                                     ]"
                                     :href="item.href"
@@ -175,12 +282,12 @@ const rightNavItems: NavItem[] = [
                                     <component
                                         v-if="item.icon"
                                         :is="item.icon"
-                                            class="mr-1.5 h-3.5 w-3.5"
+                                        class="mr-1.5 h-3.5 w-3.5"
                                     />
                                     {{ item.title }}
                                 </Link>
                                 <div
-                                    v-if="isCurrentUrl(item.href)"
+                                    v-if="isItemActive(item)"
                                     class="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"
                                 ></div>
                             </NavigationMenuItem>
@@ -189,55 +296,6 @@ const rightNavItems: NavItem[] = [
                 </div>
 
                 <div class="ml-auto flex items-center space-x-1.5">
-                    <div class="relative flex items-center space-x-0.5">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            class="group h-8 w-8 cursor-pointer"
-                        >
-                            <Search
-                                class="size-4 opacity-80 group-hover:opacity-100"
-                            />
-                        </Button>
-
-                        <div class="hidden space-x-0.5 lg:flex">
-                            <template
-                                v-for="item in rightNavItems"
-                                :key="item.title"
-                            >
-                                <TooltipProvider :delay-duration="0">
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                as-child
-                                                class="group h-8 w-8 cursor-pointer"
-                                            >
-                                                <a
-                                                    :href="toUrl(item.href)"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    <span class="sr-only">{{
-                                                        item.title
-                                                    }}</span>
-                                                    <component
-                                                        :is="item.icon"
-                                                        class="size-4 opacity-80 group-hover:opacity-100"
-                                                    />
-                                                </a>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>{{ item.title }}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </template>
-                        </div>
-                    </div>
-
                     <DropdownMenu>
                         <DropdownMenuTrigger :as-child="true">
                             <Button

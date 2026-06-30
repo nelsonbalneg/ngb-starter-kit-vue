@@ -107,3 +107,28 @@ export type SiteSetting = {
     description: string | null;
     is_public: boolean;
 };
+
+export type AppearanceSettings = {
+    theme: 'light' | 'dark' | 'system';
+    accent_color: string;
+    sidebar_style: 'light' | 'dark';
+    navigation: 'sidebar' | 'top';
+    sidebar_default: 'expanded' | 'collapsed';
+    content_width: 'fixed' | 'full';
+    density: 'compact' | 'comfortable' | 'spacious';
+    font: 'Inter' | 'Roboto' | 'Open Sans' | 'Poppins';
+    font_size: 'small' | 'medium' | 'large';
+    table_rows: 10 | 25 | 50 | 100;
+    table_sticky: boolean;
+    table_zebra: boolean;
+    table_dense: boolean;
+    card_shadow: 'none' | 'small' | 'medium' | 'large';
+    card_radius: number;
+    card_flat: boolean;
+    animation: boolean;
+    animation_speed: 'fast' | 'normal' | 'slow';
+    high_contrast: boolean;
+    reduce_motion: boolean;
+    large_text: boolean;
+    custom_css: string;
+};

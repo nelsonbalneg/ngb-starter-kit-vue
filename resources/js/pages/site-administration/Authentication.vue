@@ -15,6 +15,7 @@ import {
     ShieldCheck,
     Trash2,
     Unlock,
+    UserCheck,
     WandSparkles,
 } from '@lucide/vue';
 import AdminPage from '@/components/site-administration/AdminPage.vue';
@@ -121,6 +122,13 @@ type RoleForm = {
     stay_on_authentication: boolean;
 };
 
+type ImpersonationForm = {
+    reference_number: string;
+    reason: string;
+    impersonation?: string;
+    user?: string;
+};
+
 const props = defineProps<Props>();
 const page = usePage();
 
@@ -164,6 +172,8 @@ const roleDrawerOpen = ref(false);
 const editingUser = ref<AdminUser | null>(null);
 const passwordUser = ref<AdminUser | null>(null);
 const lockingUser = ref<AdminUser | null>(null);
+const impersonationDialogOpen = ref(false);
+const impersonatingUser = ref<AdminUser | null>(null);
 const showLockPassword = ref(false);
 const activityPanelOpen = ref(true);
 
@@ -185,6 +195,11 @@ const lockForm = useForm({
     locked_reason: '',
 });
 
+const impersonationForm = useForm<ImpersonationForm>({
+    reference_number: '',
+    reason: '',
+});
+
 const roleForm = useForm<RoleForm>({
     name: '',
     description: '',
@@ -193,6 +208,12 @@ const roleForm = useForm<RoleForm>({
 
 const canSee = (permission: string): boolean =>
     page.props.auth.permissions[permission] === true;
+
+const canImpersonateUser = (user: AdminUser): boolean =>
+    canSee('users.impersonate') &&
+    user.id !== page.props.auth.user.id &&
+    user.is_active &&
+    !user.locked_at;
 
 const initials = (name: string): string =>
     name
@@ -351,6 +372,13 @@ const openLockDrawer = (user: AdminUser): void => {
     lockDrawerOpen.value = true;
 };
 
+const openImpersonationDialog = (user: AdminUser): void => {
+    impersonatingUser.value = user;
+    impersonationForm.reset();
+    impersonationForm.clearErrors();
+    impersonationDialogOpen.value = true;
+};
+
 const openCreateRole = (): void => {
     roleForm.reset();
     roleForm.clearErrors();
@@ -393,6 +421,21 @@ const submitLock = (): void => {
             lockDrawerOpen.value = false;
             lockingUser.value = null;
             lockForm.reset();
+        },
+    });
+};
+
+const submitImpersonation = (): void => {
+    if (!impersonatingUser.value) {
+        return;
+    }
+
+    impersonationForm.post(usersRoute.impersonate(impersonatingUser.value).url, {
+        preserveScroll: true,
+        onSuccess: () => {
+            impersonationDialogOpen.value = false;
+            impersonatingUser.value = null;
+            impersonationForm.reset();
         },
     });
 };
@@ -709,6 +752,22 @@ const submitLock = (): void => {
                                                 >
                                                     <Pencil class="size-3.5" />
                                                     Edit
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    v-if="
+                                                        canImpersonateUser(user)
+                                                    "
+                                                    title="Impersonate User"
+                                                    @click="
+                                                        openImpersonationDialog(
+                                                            user,
+                                                        )
+                                                    "
+                                                >
+                                                    <UserCheck
+                                                        class="size-3.5"
+                                                    />
+                                                    Impersonate
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     v-if="
@@ -1131,6 +1190,108 @@ const submitLock = (): void => {
                                         lockForm.processing
                                             ? 'Locking...'
                                             : 'Lock account'
+                                    }}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog v-model:open="impersonationDialogOpen">
+                    <DialogContent class="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Impersonate user</DialogTitle>
+                            <DialogDescription>
+                                You are about to impersonate this user. This
+                                action will be logged for audit purposes.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <form
+                            class="grid gap-3 text-[13px]"
+                            @submit.prevent="submitImpersonation"
+                        >
+                            <div
+                                v-if="impersonationForm.errors.impersonation"
+                                class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+                            >
+                                {{ impersonationForm.errors.impersonation }}
+                            </div>
+                            <div
+                                v-if="impersonationForm.errors.user"
+                                class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+                            >
+                                {{ impersonationForm.errors.user }}
+                            </div>
+
+                            <div class="grid gap-1.5">
+                                <Label for="impersonation-reference"
+                                    >Reference #</Label
+                                >
+                                <Input
+                                    id="impersonation-reference"
+                                    v-model="impersonationForm.reference_number"
+                                    required
+                                    maxlength="100"
+                                    placeholder="REF-2026-001"
+                                />
+                                <p
+                                    v-if="
+                                        impersonationForm.errors
+                                            .reference_number
+                                    "
+                                    class="text-xs text-destructive"
+                                >
+                                    {{
+                                        impersonationForm.errors
+                                            .reference_number
+                                    }}
+                                </p>
+                            </div>
+
+                            <div class="grid gap-1.5">
+                                <Label for="impersonation-reason"
+                                    >Reason for Impersonation</Label
+                                >
+                                <textarea
+                                    id="impersonation-reason"
+                                    v-model="impersonationForm.reason"
+                                    required
+                                    minlength="10"
+                                    maxlength="1000"
+                                    rows="4"
+                                    class="min-h-24 rounded-md border bg-background px-3 py-2 text-[13px] transition-colors outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
+                                    placeholder="Explain the support or troubleshooting reason."
+                                />
+                                <p
+                                    v-if="impersonationForm.errors.reason"
+                                    class="text-xs text-destructive"
+                                >
+                                    {{ impersonationForm.errors.reason }}
+                                </p>
+                            </div>
+
+                            <DialogFooter class="mt-1 gap-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    @click="impersonationDialogOpen = false"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    :disabled="impersonationForm.processing"
+                                >
+                                    <Spinner
+                                        v-if="impersonationForm.processing"
+                                        class="size-3.5"
+                                    />
+                                    <UserCheck v-else class="size-3.5" />
+                                    {{
+                                        impersonationForm.processing
+                                            ? 'Starting...'
+                                            : 'Start impersonation'
                                     }}
                                 </Button>
                             </DialogFooter>

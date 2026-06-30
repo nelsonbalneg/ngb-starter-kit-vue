@@ -11,6 +11,7 @@ use App\Http\Controllers\SiteAdministration\RolePermissionController;
 use App\Http\Controllers\SiteAdministration\SiteSettingController;
 use App\Http\Controllers\SiteAdministration\UserAccessController;
 use App\Http\Controllers\SiteAdministration\UserAdministrationController;
+use App\Http\Controllers\SiteAdministration\UserImpersonationController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
@@ -69,6 +70,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->name('users.lock');
             Route::post('users/{user}/unlock', [UserAdministrationController::class, 'unlock'])
                 ->name('users.unlock');
+            Route::post('users/{user}/impersonate', [UserImpersonationController::class, 'store'])
+                ->name('users.impersonate');
+            Route::post('authentication/impersonation/stop', [UserImpersonationController::class, 'destroy'])
+                ->name('authentication.impersonation.stop');
 
             Route::get('user-access/{user}', [UserAccessController::class, 'edit'])
                 ->name('user-access.edit');
@@ -80,6 +85,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::post('settings/branding', [SiteSettingController::class, 'updateBranding'])
                 ->name('settings.branding.update');
+            Route::post('settings/appearance', [SiteSettingController::class, 'updateAppearance'])
+                ->name('settings.appearance.update');
             Route::post('settings/maintenance', [SiteSettingController::class, 'updateMaintenance'])
                 ->name('settings.maintenance.update');
 

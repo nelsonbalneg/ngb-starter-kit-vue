@@ -3,6 +3,7 @@ import { watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 import AppContent from '@/components/AppContent.vue';
+import ImpersonationBanner from '@/components/ImpersonationBanner.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
@@ -45,6 +46,7 @@ watch(
             class="flex min-h-screen flex-col overflow-x-hidden"
         >
             <AppSidebarHeader :breadcrumbs="breadcrumbs" />
+            <ImpersonationBanner />
             <div class="flex flex-1 flex-col justify-between">
                 <div class="flex-1">
                     <slot />

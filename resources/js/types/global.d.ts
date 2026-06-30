@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { AppearanceSettings } from '@/types/site-administration';
 
 type Branding = {
     site_name?: string;
@@ -11,6 +12,12 @@ type Branding = {
     enable_passkey?: boolean;
     enable_registration?: boolean;
     enable_forgot_password?: boolean;
+};
+
+type ImpersonationState = {
+    is_impersonating: boolean;
+    impersonated_user_name: string | null;
+    reference_number: string | null;
 };
 
 // Extend ImportMeta interface for Vite...
@@ -32,6 +39,8 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             branding: Branding;
+            appearance: AppearanceSettings;
+            impersonation: ImpersonationState;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

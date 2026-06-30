@@ -88,6 +88,34 @@ class SiteSettingAdministrationService
                 'allowed_ips' => '',
                 'bypass_users' => '',
             ],
+            'appearance' => [
+                'theme' => 'system',
+                'accent_color' => '#2563eb',
+                'sidebar_style' => 'light',
+                'navigation' => 'sidebar',
+                'sidebar_default' => 'expanded',
+                'content_width' => 'fixed',
+                'density' => 'comfortable',
+                'font' => 'Inter',
+                'font_size' => 'medium',
+                'table_rows' => 25,
+                'table_sticky' => true,
+                'table_zebra' => false,
+                'table_dense' => false,
+                'card_shadow' => 'small',
+                'card_radius' => 8,
+                'card_flat' => false,
+                'animation' => true,
+                'animation_speed' => 'normal',
+                'login_background' => null,
+                'login_style' => 'centered',
+                'login_background_type' => 'image',
+                'login_overlay' => 35,
+                'high_contrast' => false,
+                'reduce_motion' => false,
+                'large_text' => false,
+                'custom_css' => '',
+            ],
         ];
 
         return array_replace_recursive($defaults, $grouped);
@@ -201,6 +229,59 @@ class SiteSettingAdministrationService
 
     /**
      * @param  array<string, mixed>  $data
+     */
+    public function updateAppearance(array $data): void
+    {
+        DB::transaction(function () use ($data) {
+            $this->setValue('appearance', 'theme', $data['theme'] ?? 'system');
+            $this->setValue('appearance', 'accent_color', $data['accent_color'] ?? '#2563eb');
+            $this->setValue('appearance', 'sidebar_style', $data['sidebar_style'] ?? 'light');
+            $this->setValue('appearance', 'navigation', $data['navigation'] ?? 'sidebar');
+            $this->setValue('appearance', 'sidebar_default', $data['sidebar_default'] ?? 'expanded');
+            $this->setValue('appearance', 'content_width', $data['content_width'] ?? 'fixed');
+            $this->setValue('appearance', 'density', $data['density'] ?? 'comfortable');
+            $this->setValue('appearance', 'font', $data['font'] ?? 'Inter');
+            $this->setValue('appearance', 'font_size', $data['font_size'] ?? 'medium');
+            $this->setValue('appearance', 'table_rows', (int) ($data['table_rows'] ?? 25), 'integer');
+            $this->setValue('appearance', 'table_sticky', (bool) ($data['table_sticky'] ?? false), 'boolean');
+            $this->setValue('appearance', 'table_zebra', (bool) ($data['table_zebra'] ?? false), 'boolean');
+            $this->setValue('appearance', 'table_dense', (bool) ($data['table_dense'] ?? false), 'boolean');
+            $this->setValue('appearance', 'card_shadow', $data['card_shadow'] ?? 'small');
+            $this->setValue('appearance', 'card_radius', (int) ($data['card_radius'] ?? 8), 'integer');
+            $this->setValue('appearance', 'card_flat', (bool) ($data['card_flat'] ?? false), 'boolean');
+            $this->setValue('appearance', 'animation', (bool) ($data['animation'] ?? false), 'boolean');
+            $this->setValue('appearance', 'animation_speed', $data['animation_speed'] ?? 'normal');
+            $this->setValue('appearance', 'login_style', $data['login_style'] ?? 'centered');
+            $this->setValue('appearance', 'login_background_type', $data['login_background_type'] ?? 'image');
+            $this->setValue('appearance', 'login_overlay', (int) ($data['login_overlay'] ?? 35), 'integer');
+            $this->setValue('appearance', 'high_contrast', (bool) ($data['high_contrast'] ?? false), 'boolean');
+            $this->setValue('appearance', 'reduce_motion', (bool) ($data['reduce_motion'] ?? false), 'boolean');
+            $this->setValue('appearance', 'large_text', (bool) ($data['large_text'] ?? false), 'boolean');
+            $this->setValue('appearance', 'custom_css', $this->sanitizeCustomCss((string) ($data['custom_css'] ?? '')), 'text');
+
+            if (isset($data['login_background_file']) && $data['login_background_file'] instanceof UploadedFile) {
+                $oldPath = $this->getValue('appearance', 'login_background');
+                if ($oldPath && Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+
+                $path = Storage::disk('public')->putFile('appearance/login-backgrounds', $data['login_background_file']);
+                $this->setValue('appearance', 'login_background', $path);
+            } elseif (array_key_exists('login_background', $data) && empty($data['login_background'])) {
+                $oldPath = $this->getValue('appearance', 'login_background');
+                if ($oldPath && Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+
+                $this->setValue('appearance', 'login_background', null);
+            }
+        });
+
+        cache()->forget('site_appearance_settings');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
     private function normalize(array $data): array
@@ -220,5 +301,15 @@ class SiteSettingAdministrationService
         return is_array($value)
             ? ($value['value'] ?? $default)
             : $default;
+    }
+
+    private function sanitizeCustomCss(string $css): string
+    {
+        $css = preg_replace('/@import\s+[^;]+;/i', '', $css) ?? '';
+        $css = preg_replace('/expression\s*\([^)]*\)/i', '', $css) ?? '';
+        $css = preg_replace('/javascript\s*:/i', '', $css) ?? '';
+        $css = preg_replace('/<\/?style[^>]*>/i', '', $css) ?? '';
+
+        return trim($css);
     }
 }

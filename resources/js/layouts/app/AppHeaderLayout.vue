@@ -4,6 +4,7 @@ import { usePage } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 import AppContent from '@/components/AppContent.vue';
 import AppHeader from '@/components/AppHeader.vue';
+import ImpersonationBanner from '@/components/ImpersonationBanner.vue';
 import AppShell from '@/components/AppShell.vue';
 import { Toaster } from '@/components/ui/sonner';
 import type { BreadcrumbItem } from '@/types';
@@ -39,6 +40,7 @@ watch(
 <template>
     <AppShell variant="header">
         <AppHeader :breadcrumbs="breadcrumbs" />
+        <ImpersonationBanner />
         <AppContent variant="header" class="flex min-h-screen flex-col">
             <div class="flex flex-1 flex-col justify-between">
                 <div class="flex-1">

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { HTMLAttributes, Ref } from "vue"
+import { usePage } from "@inertiajs/vue3"
 import { defaultDocument, useEventListener, useMediaQuery, useVModel } from "@vueuse/core"
 import { TooltipProvider } from "reka-ui"
-import { computed, ref } from "vue"
+import { computed, ref, watch } from "vue"
 import { cn } from "@/lib/utils"
 import { provideSidebarContext, SIDEBAR_COOKIE_MAX_AGE, SIDEBAR_COOKIE_NAME, SIDEBAR_KEYBOARD_SHORTCUT, SIDEBAR_WIDTH, SIDEBAR_WIDTH_ICON } from "./utils"
 
@@ -19,6 +20,7 @@ const emits = defineEmits<{
   "update:open": [open: boolean]
 }>()
 
+const page = usePage()
 const isMobile = useMediaQuery("(max-width: 768px)")
 const openMobile = ref(false)
 
@@ -49,6 +51,15 @@ useEventListener("keydown", (event: KeyboardEvent) => {
     toggleSidebar()
   }
 })
+
+watch(
+  () => page.props.appearance?.sidebar_default,
+  (value) => {
+    if (!isMobile.value && value) {
+      setOpen(value !== "collapsed")
+    }
+  },
+)
 
 // We add a state so that we can do data-state="expanded" or "collapsed".
 // This makes it easier to style the sidebar with Tailwind classes.
