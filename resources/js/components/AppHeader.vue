@@ -65,40 +65,70 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+        routeName: 'dashboard',
     },
     {
         title: 'Site Administration',
         href: organizations.index(),
         icon: Cog,
         permission: 'site-administration.view',
+        routeName: 'site-administration.organizations.index',
         children: [
             {
                 title: 'Organizations',
                 href: organizations.index(),
                 icon: Building2,
                 permission: 'access.organizations.view',
+                routeName: 'site-administration.organizations.index',
             },
             {
                 title: 'Authentication',
                 href: authentication.index(),
                 icon: BadgeCheck,
                 permission: 'authentication.view',
+                routeName: 'site-administration.authentication.index',
             },
             {
                 title: 'Lookups',
                 href: lookups.index(),
                 icon: ListTree,
                 permission: 'lookups.view',
+                routeName: 'site-administration.lookups.index',
             },
             {
                 title: 'Site Settings',
                 href: settings.index(),
                 icon: Settings,
                 permission: 'settings.view',
+                routeName: 'site-administration.settings.index',
             },
         ],
     },
 ];
+
+const systemFeatures = computed(() => page.props.systemFeatures ?? {});
+
+const featureStatus = (
+    routeName?: string,
+): 'active' | 'maintenance' | 'disabled' =>
+    routeName ? (systemFeatures.value[routeName] ?? 'active') : 'active';
+
+const featureVisible = (routeName?: string): boolean =>
+    featureStatus(routeName) !== 'disabled';
+
+const featureMaintenance = (routeName?: string): boolean =>
+    featureStatus(routeName) === 'maintenance';
+
+const decorateFeature = (item: NavItem): NavItem => ({
+    ...item,
+    badge:
+        item.routeName && featureMaintenance(item.routeName)
+            ? 'Maintenance'
+            : item.badge,
+    children: item.children
+        ?.map(decorateFeature)
+        .filter((child) => canAccess(child)),
+});
 
 const canAccess = (item: NavItem): boolean => {
     if (item.children?.length) {
@@ -106,12 +136,15 @@ const canAccess = (item: NavItem): boolean => {
     }
 
     return (
-        !item.permission ||
-        page.props.auth.permissions[item.permission] === true
+        featureVisible(item.routeName) &&
+        (!item.permission ||
+            page.props.auth.permissions[item.permission] === true)
     );
 };
 
-const visibleItems = computed(() => mainNavItems.filter(canAccess));
+const visibleItems = computed(() =>
+    mainNavItems.map(decorateFeature).filter(canAccess),
+);
 
 const visibleChildren = (item: NavItem): NavItem[] =>
     item.children?.filter(canAccess) ?? [];
@@ -167,6 +200,12 @@ const isItemActive = (item: NavItem): boolean =>
                                             class="h-4 w-4"
                                         />
                                         {{ item.title }}
+                                        <span
+                                            v-if="item.badge"
+                                            class="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                                        >
+                                            {{ item.badge }}
+                                        </span>
                                     </Link>
 
                                     <template
@@ -263,6 +302,12 @@ const isItemActive = (item: NavItem): boolean =>
                                                     :is="child.icon"
                                                 />
                                                 {{ child.title }}
+                                                <span
+                                                    v-if="child.badge"
+                                                    class="ml-auto rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                                                >
+                                                    {{ child.badge }}
+                                                </span>
                                             </Link>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>

@@ -2,9 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SystemFeature;
 use App\Services\SiteAdministration\SiteSettingAdministrationService;
 use App\Services\SiteAdministration\UserImpersonationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -67,6 +69,9 @@ class HandleInertiaRequests extends Middleware
                         : null),
             ],
             'sidebarOpen' => $this->sidebarOpen($request),
+            'systemFeatures' => fn (): array => Schema::hasTable('system_features')
+                ? SystemFeature::routeStatusMap()
+                : [],
         ];
     }
 

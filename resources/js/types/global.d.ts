@@ -41,6 +41,7 @@ declare module '@inertiajs/core' {
             branding: Branding;
             appearance: AppearanceSettings;
             impersonation: ImpersonationState;
+            systemFeatures: Record<string, 'active' | 'maintenance' | 'disabled'>;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

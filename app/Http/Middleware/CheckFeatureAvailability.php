@@ -30,9 +30,7 @@ class CheckFeatureAvailability
         'api.sso-user-access',
     ];
 
-    private array $alwaysAllowedPrefixes = [
-        'site-administration.',
-    ];
+    private array $alwaysAllowedPrefixes = [];
 
     public function handle(Request $request, Closure $next): Response
     {

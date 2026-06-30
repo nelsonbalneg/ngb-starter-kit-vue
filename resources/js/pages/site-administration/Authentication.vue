@@ -457,25 +457,30 @@ const submitImpersonation = (): void => {
             "
         >
             <div class="rounded-lg border bg-card">
-                <div class="border-b px-3 pt-3">
-                    <div class="flex gap-1 overflow-x-auto">
-                        <Button
+                <div class="flex gap-1 border-b bg-muted/20 px-3 pt-3">
+                    <nav
+                        class="scrollbar-none flex gap-1 overflow-x-auto"
+                        role="tablist"
+                        aria-label="Authentication sections"
+                    >
+                        <Link
                             v-for="tab in tabs.filter((item) =>
                                 canSee(item.permission),
                             )"
                             :key="tab.key"
-                            as-child
-                            size="sm"
-                            :variant="
-                                activeTab === tab.key ? 'default' : 'ghost'
+                            :href="tabHref(tab.key)"
+                            role="tab"
+                            :aria-selected="activeTab === tab.key"
+                            class="-mb-px inline-flex shrink-0 items-center border-b-2 px-4 py-2 text-[13px] font-medium transition-colors focus:outline-none"
+                            :class="
+                                activeTab === tab.key
+                                    ? 'border-primary text-foreground'
+                                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
                             "
-                            class="mb-2 shrink-0"
                         >
-                            <Link :href="tabHref(tab.key)">{{
-                                tab.label
-                            }}</Link>
-                        </Button>
-                    </div>
+                            {{ tab.label }}
+                        </Link>
+                    </nav>
                 </div>
 
                 <div class="border-b p-3">

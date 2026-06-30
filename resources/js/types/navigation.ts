@@ -12,5 +12,7 @@ export type NavItem = {
     icon?: LucideIcon;
     isActive?: boolean;
     permission?: string;
+    routeName?: string;
+    badge?: string;
     children?: NavItem[];
 };
