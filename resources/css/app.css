@@ -342,6 +342,13 @@ html.sidebar-light.dark {
     --sidebar-border: hsl(222 32% 18%) !important;
 }
 
+/* Disable transition animations during initial page load to prevent layout shifts */
+body.preload,
+body.preload * {
+    transition: none !important;
+    animation: none !important;
+}
+
 /* Hover and active menu states for light sidebar */
 html.sidebar-light:not(.dark) [data-sidebar="menu-button"]:hover:not([data-active="true"]),
 html.sidebar-light:not(.dark) [data-sidebar="menu-sub-button"]:hover:not([data-active="true"]),

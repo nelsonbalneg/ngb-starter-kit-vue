@@ -18,8 +18,11 @@ withDefaults(
 const { resolvedAppearance, updateAppearance } = useAppearance();
 
 const toggleTheme = (): void => {
+    console.log('[Theme Toggle] Current resolved theme:', resolvedAppearance.value);
     const nextTheme = resolvedAppearance.value === 'dark' ? 'light' : 'dark';
+    console.log('[Theme Toggle] Switching to:', nextTheme);
     updateAppearance(nextTheme);
+    console.log('[Theme Toggle] New resolved theme:', resolvedAppearance.value);
 };
 </script>
 

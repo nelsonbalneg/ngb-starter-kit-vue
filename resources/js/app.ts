@@ -31,3 +31,8 @@ initializeTheme();
 
 // This will listen for flash toast data from the server...
 initializeFlashToast();
+
+// Enable layout transitions after initial load
+if (typeof document !== 'undefined') {
+    document.body.classList.remove('preload');
+}

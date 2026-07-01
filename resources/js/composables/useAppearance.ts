@@ -267,7 +267,6 @@ const handleSystemThemeChange = (): void => {
 };
 
 export function initializeTheme(): void {
-    applyAppearanceSettings(defaultAppearanceSettings);
     mediaQuery()?.addEventListener('change', handleSystemThemeChange);
 }
 

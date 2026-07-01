@@ -158,7 +158,7 @@
             <title>{{ config('app.name', 'Laravel') }}</title>
         </x-inertia::head>
     </head>
-    <body class="font-sans antialiased {{ $htmlClassString }}">
+    <body class="font-sans antialiased {{ $htmlClassString }} preload">
         <x-inertia::app />
     </body>
 </html>

@@ -22,7 +22,7 @@ const page = usePage();
     <AppShell variant="header">
         <AppHeader :breadcrumbs="breadcrumbs" />
         <ImpersonationBanner />
-        <AppContent variant="header" class="flex min-h-screen flex-col">
+        <AppContent variant="header" class="flex flex-1 flex-col">
             <div class="flex flex-1 flex-col justify-between">
                 <div class="flex-1">
                     <slot />

@@ -24,7 +24,7 @@ const page = usePage();
         <AppSidebar />
         <AppContent
             variant="sidebar"
-            class="flex min-h-screen flex-col overflow-x-hidden"
+            class="flex flex-1 flex-col overflow-x-hidden"
         >
             <AppSidebarHeader :breadcrumbs="breadcrumbs" />
             <ImpersonationBanner />
