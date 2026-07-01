@@ -374,6 +374,7 @@ const openCreateCampus = (parent: Organization): void => {
 
 const openEditOrganization = (organization: Organization): void => {
     editingOrganization.value = organization;
+    organizationForm.reset();
     organizationForm.clearErrors();
     organizationForm.parent_id = organization.parent_id;
     organizationForm.type = organization.type;
@@ -390,21 +391,25 @@ const openEditOrganization = (organization: Organization): void => {
 
 const submitOrganization = (): void => {
     if (editingOrganization.value) {
-        organizationForm.put(
-            organizationsRoute.update(editingOrganization.value).url,
-            {
-                preserveScroll: true,
-                forceFormData: true,
-                onSuccess: () => {
-                    organizationDialogOpen.value = false;
-                    toast.success('Organization updated successfully.');
+        organizationForm
+            .transform((data) => ({ ...data, _method: 'put' }))
+            .post(
+                organizationsRoute.update(editingOrganization.value).url,
+                {
+                    preserveScroll: true,
+                    forceFormData: true,
+                    onSuccess: () => {
+                        organizationDialogOpen.value = false;
+                    },
+                    onError: (errors) => {
+                        const first = Object.values(errors)[0];
+                        toast.error(first ?? 'Failed to update organization.');
+                    },
+                    onFinish: () => {
+                        organizationForm.transform((data) => data);
+                    },
                 },
-                onError: (errors) => {
-                    const first = Object.values(errors)[0];
-                    toast.error(first ?? 'Failed to update organization.');
-                },
-            },
-        );
+            );
         return;
     }
 
@@ -414,7 +419,6 @@ const submitOrganization = (): void => {
         onSuccess: () => {
             organizationDialogOpen.value = false;
             organizationForm.reset();
-            toast.success('Organization created successfully.');
         },
         onError: (errors) => {
             const first = Object.values(errors)[0];
@@ -511,18 +515,22 @@ const openEditUnit = (unit: OrganizationUnit): void => {
 
 const submitUnit = (): void => {
     if (editingUnit.value) {
-        unitForm.put(organizationUnitsRoute.update(editingUnit.value).url, {
-            preserveScroll: true,
-            forceFormData: true,
-            onSuccess: () => {
-                unitDialogOpen.value = false;
-                toast.success('Unit updated successfully.');
-            },
-            onError: (errors) => {
-                const first = Object.values(errors)[0];
-                toast.error(first ?? 'Failed to update unit.');
-            },
-        });
+        unitForm
+            .transform((data) => ({ ...data, _method: 'put' }))
+            .post(organizationUnitsRoute.update(editingUnit.value).url, {
+                preserveScroll: true,
+                forceFormData: true,
+                onSuccess: () => {
+                    unitDialogOpen.value = false;
+                },
+                onError: (errors) => {
+                    const first = Object.values(errors)[0];
+                    toast.error(first ?? 'Failed to update unit.');
+                },
+                onFinish: () => {
+                    unitForm.transform((data) => data);
+                },
+            });
         return;
     }
 
@@ -532,7 +540,6 @@ const submitUnit = (): void => {
         onSuccess: () => {
             unitDialogOpen.value = false;
             unitForm.reset();
-            toast.success('Unit created successfully.');
         },
         onError: (errors) => {
             const first = Object.values(errors)[0];
@@ -1393,6 +1400,12 @@ const unitDialogTitle = computed(() => {
                                     <select
                                         v-model="organizationForm.type"
                                         class="h-8 w-full rounded-md border bg-background px-2 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
+                                        @change="
+                                            organizationForm.clearErrors(
+                                                'type',
+                                                'parent_id',
+                                            )
+                                        "
                                     >
                                         <option value="university">
                                             Parent
@@ -1414,6 +1427,11 @@ const unitDialogTitle = computed(() => {
                                     <select
                                         v-model="organizationForm.parent_id"
                                         class="h-8 w-full rounded-md border bg-background px-2 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
+                                        @change="
+                                            organizationForm.clearErrors(
+                                                'parent_id',
+                                            )
+                                        "
                                     >
                                         <option :value="null">
                                             — Select parent —
@@ -1433,6 +1451,9 @@ const unitDialogTitle = computed(() => {
                                     />
                                 </div>
                             </div>
+                            <InputError
+                                :message="organizationForm.errors.type"
+                            />
                         </div>
 
                         <Separator />
@@ -1457,6 +1478,9 @@ const unitDialogTitle = computed(() => {
                                         v-model="organizationForm.name"
                                         class="h-8 text-[13px]"
                                         required
+                                        @update:model-value="
+                                            organizationForm.clearErrors('name')
+                                        "
                                     />
                                     <InputError
                                         :message="organizationForm.errors.name"
@@ -1468,6 +1492,9 @@ const unitDialogTitle = computed(() => {
                                         v-model="organizationForm.slug"
                                         class="h-8 font-mono text-[13px]"
                                         placeholder="auto-generated"
+                                        @update:model-value="
+                                            organizationForm.clearErrors('slug')
+                                        "
                                     />
                                     <InputError
                                         :message="organizationForm.errors.slug"
@@ -1680,6 +1707,9 @@ const unitDialogTitle = computed(() => {
                                     v-model="unitForm.name"
                                     class="h-8 text-[13px]"
                                     required
+                                    @update:model-value="
+                                        unitForm.clearErrors('name')
+                                    "
                                 />
                                 <InputError :message="unitForm.errors.name" />
                             </div>

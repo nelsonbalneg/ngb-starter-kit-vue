@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import { toast } from 'vue-sonner';
 import AppContent from '@/components/AppContent.vue';
 import AppHeader from '@/components/AppHeader.vue';
 import ImpersonationBanner from '@/components/ImpersonationBanner.vue';
@@ -18,23 +16,6 @@ withDefaults(defineProps<Props>(), {
 });
 
 const page = usePage();
-
-watch(
-    () => page.props.flash,
-    (flash: any) => {
-        if (flash?.toast) {
-            const { type, message } = flash.toast;
-            if (type === 'success') {
-                toast.success(message);
-            } else if (type === 'error') {
-                toast.error(message);
-            } else {
-                toast(message);
-            }
-        }
-    },
-    { deep: true, immediate: true },
-);
 </script>
 
 <template>
