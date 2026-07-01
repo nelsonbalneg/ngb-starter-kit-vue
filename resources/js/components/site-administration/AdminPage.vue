@@ -10,6 +10,7 @@ defineProps<Props>();
 <template>
     <section class="flex flex-col gap-4 p-3 md:p-5">
         <div
+            v-if="title"
             class="rounded-xl border border-border/70 bg-card px-4 py-3 shadow-sm shadow-slate-900/[0.03] dark:bg-card/72 dark:shadow-slate-900/5 dark:backdrop-blur"
         >
             <h1 class="text-lg font-semibold tracking-tight text-foreground">

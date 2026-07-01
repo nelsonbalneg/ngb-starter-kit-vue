@@ -15,6 +15,8 @@ import {
     School,
     Trash2,
     X,
+    Search,
+    Building2,
 } from '@lucide/vue';
 
 import AsyncUserSelect from '@/components/site-administration/AsyncUserSelect.vue';
@@ -597,61 +599,80 @@ const unitDialogTitle = computed(() => {
 <template>
     <Head title="Organizations" />
 
-    <AdminPage
-        title="Organizations"
-        description="Manage organization records, hierarchy, logos, and assigned office heads."
-    >
+    <AdminPage title="" description="">
+        <!-- Top Header Card -->
+        <div class="rounded-2xl border border-border/70 bg-card p-5 shadow-xs shadow-slate-900/[0.02]">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <h1 class="text-xl font-semibold tracking-tight text-foreground">Organizations</h1>
+                    <p class="mt-1 text-[13px] text-muted-foreground">Manage hierarchy, campuses, offices, departments, logos, and assigned heads.</p>
+                </div>
+                <Button
+                    v-if="canCreate"
+                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-xs hover:bg-primary/90"
+                    @click="openCreateUniversity"
+                >
+                    <Plus class="h-4 w-4" /> Add Organization
+                </Button>
+            </div>
+
+            <div class="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
+                <div class="relative flex-1">
+                    <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        v-model="query.search"
+                        class="h-11 w-full rounded-xl border border-border/70 bg-background pl-10 pr-3 text-sm focus-visible:ring-3 focus-visible:ring-ring focus:outline-none"
+                        placeholder="Search organization name, location, or head..."
+                        @keydown.enter="search"
+                    />
+                </div>
+                <select
+                    v-model="query.status"
+                    class="h-11 rounded-xl border border-border/70 bg-background px-3 text-sm focus:ring-3 focus:ring-ring focus:outline-none"
+                >
+                    <option value="">All statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <Button
+                    class="h-11 rounded-xl bg-foreground text-background hover:bg-foreground/90 px-5 text-sm font-semibold"
+                    @click="search"
+                >
+                    Search
+                </Button>
+                <Button
+                    variant="ghost"
+                    class="h-11 rounded-xl px-4 text-sm font-semibold text-muted-foreground hover:text-foreground"
+                    @click="reset"
+                >
+                    Reset
+                </Button>
+            </div>
+        </div>
+
         <div
-            class="grid gap-3"
+            class="grid gap-4 mt-1"
             :class="
                 activityPanelOpen
-                    ? 'xl:grid-cols-[minmax(0,1fr)_20rem]'
+                    ? 'xl:grid-cols-[minmax(0,1fr)_320px]'
                     : 'xl:grid-cols-1'
             "
         >
-            <div class="rounded-lg border bg-card">
-                <!-- Toolbar -->
-                <div
-                    class="flex flex-col gap-2 border-b p-3 md:flex-row md:items-center md:justify-between"
-                >
-                    <AdminToolbar
-                        v-model:search="query.search"
-                        placeholder="Search organizations…"
-                        @submit="search"
-                        @reset="reset"
-                    >
-                        <select
-                            v-model="query.status"
-                            class="h-8 rounded-md border bg-background px-2 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
-                        >
-                            <option value="">All statuses</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </AdminToolbar>
-
-                    <Button
-                        v-if="canCreate"
-                        size="icon"
-                        class="size-8"
-                        title="Add parent organization"
-                        aria-label="Add parent organization"
-                        @click="openCreateUniversity"
-                    >
-                        <Plus class="size-3.5" />
-                    </Button>
-                </div>
-
+            <div class="space-y-4">
                 <!-- Hierarchy tree -->
-                <div v-if="organizations.length" class="divide-y">
-                    <!-- ── Parent Organization Row ── -->
-                    <div v-for="parent in organizations" :key="parent.id">
+                <template v-if="organizations.length">
+                    <!-- ── Parent Organization Card ── -->
+                    <article
+                        v-for="parent in organizations"
+                        :key="parent.id"
+                        class="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-xs"
+                    >
                         <!-- Parent header -->
                         <div
-                            class="flex items-center justify-between gap-2 bg-muted/40 px-3 py-2"
+                            class="flex items-start justify-between gap-4 border-b border-border/30 p-4"
                         >
                             <!-- Left: chevron + icon + info -->
-                            <div class="flex min-w-0 flex-1 items-center gap-2">
+                            <div class="flex min-w-0 flex-1 items-start gap-3">
                                 <button
                                     v-if="hasCampuses(parent)"
                                     type="button"
@@ -660,7 +681,7 @@ const unitDialogTitle = computed(() => {
                                             ? `Collapse ${parent.name}`
                                             : `Expand ${parent.name}`
                                     "
-                                    class="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                    class="mt-1 flex size-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                     @click="toggleParent(parent.id)"
                                 >
                                     <ChevronDown
@@ -671,12 +692,12 @@ const unitDialogTitle = computed(() => {
                                 </button>
                                 <span
                                     v-else
-                                    class="size-5 shrink-0"
+                                    class="size-6 shrink-0"
                                     aria-hidden="true"
                                 />
 
                                 <span
-                                    class="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded bg-background ring-1 ring-border"
+                                    class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:ring-blue-900/50"
                                 >
                                     <img
                                         v-if="resolveLogoUrl(parent.logo_path)"
@@ -689,24 +710,24 @@ const unitDialogTitle = computed(() => {
                                             ).style.display = 'none'
                                         "
                                     />
-                                    <School
+                                    <Building2
                                         v-else
-                                        class="size-4 text-muted-foreground"
+                                        class="size-5"
                                     />
                                 </span>
 
                                 <div class="min-w-0">
                                     <div
-                                        class="flex flex-wrap items-center gap-1.5"
+                                        class="flex flex-wrap items-center gap-2"
                                     >
-                                        <p
-                                            class="truncate text-[13px] font-semibold"
+                                        <h2
+                                            class="truncate text-base font-semibold text-foreground"
                                         >
                                             {{ parent.name }}
-                                        </p>
+                                        </h2>
                                         <Badge
                                             variant="outline"
-                                            class="text-[11px]"
+                                            class="text-[11px] bg-blue-50 text-blue-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-blue-950/40 dark:text-blue-400 dark:ring-blue-900/40"
                                             >Parent</Badge
                                         >
                                         <OrgStatusBadge
@@ -714,7 +735,7 @@ const unitDialogTitle = computed(() => {
                                         />
                                     </div>
                                     <p
-                                        class="truncate text-[11px] text-muted-foreground"
+                                        class="mt-1 text-sm text-muted-foreground"
                                     >
                                         {{ parent.description ?? parent.slug }}
                                     </p>
@@ -727,17 +748,18 @@ const unitDialogTitle = computed(() => {
                                     v-if="canCreate"
                                     size="icon"
                                     variant="outline"
-                                    class="size-7"
+                                    class="size-8 rounded-lg"
                                     :title="`Add child under ${parent.name}`"
                                     :aria-label="`Add child under ${parent.name}`"
                                     @click="openCreateCampus(parent)"
                                 >
-                                    <Plus class="size-3.5" />
+                                    <Plus class="size-4" />
                                 </Button>
 
                                 <OrgIconButton
                                     v-if="canUpdate"
                                     :icon="Pencil"
+                                    class="size-8 rounded-lg"
                                     label="Edit organization"
                                     @click="openEditOrganization(parent)"
                                 />
@@ -758,7 +780,7 @@ const unitDialogTitle = computed(() => {
                                         :icon="Trash2"
                                         label="Delete organization"
                                         variant="ghost"
-                                        class="text-destructive hover:text-destructive"
+                                        class="size-8 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
                                     />
                                 </ConfirmAction>
                             </div>
@@ -770,202 +792,200 @@ const unitDialogTitle = computed(() => {
                                 hasCampuses(parent) &&
                                 expandedParents.has(parent.id)
                             "
+                            class="space-y-3 bg-slate-50/70 p-4 pl-10 dark:bg-slate-950/20"
                         >
-                            <div class="divide-y border-t bg-background">
-                                <!-- ── Campus Row ── -->
+                            <!-- ── Campus Row ── -->
+                            <section
+                                v-for="campus in parent.children ?? []"
+                                :key="campus.id"
+                                class="rounded-2xl border border-border/70 bg-card p-4 shadow-xs"
+                            >
+                                <!-- Campus header -->
                                 <div
-                                    v-for="campus in parent.children ?? []"
-                                    :key="campus.id"
-                                    class="pl-7"
+                                    class="flex items-start justify-between gap-4"
                                 >
-                                    <!-- Campus header -->
                                     <div
-                                        class="flex items-center justify-between gap-2 border-b px-3 py-2"
+                                        class="flex min-w-0 flex-1 items-start gap-3"
                                     >
-                                        <div
-                                            class="flex min-w-0 flex-1 items-center gap-2"
+                                        <button
+                                            v-if="hasOffices(campus)"
+                                            type="button"
+                                            :aria-label="
+                                                expandedCampuses.has(
+                                                    campus.id,
+                                                )
+                                                    ? `Collapse ${campus.name}`
+                                                    : `Expand ${campus.name}`
+                                            "
+                                            class="mt-1 flex size-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                            @click="toggleCampus(campus.id)"
                                         >
-                                            <button
-                                                v-if="hasOffices(campus)"
-                                                type="button"
-                                                :aria-label="
+                                            <ChevronDown
+                                                v-if="
                                                     expandedCampuses.has(
                                                         campus.id,
                                                     )
-                                                        ? `Collapse ${campus.name}`
-                                                        : `Expand ${campus.name}`
                                                 "
-                                                class="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                                @click="toggleCampus(campus.id)"
-                                            >
-                                                <ChevronDown
-                                                    v-if="
-                                                        expandedCampuses.has(
-                                                            campus.id,
-                                                        )
-                                                    "
-                                                    class="size-4"
-                                                />
-                                                <ChevronRight
-                                                    v-else
-                                                    class="size-4"
-                                                />
-                                            </button>
-                                            <span
+                                                class="size-4"
+                                            />
+                                            <ChevronRight
                                                 v-else
-                                                class="size-5 shrink-0"
-                                                aria-hidden="true"
+                                                class="size-4"
                                             />
+                                        </button>
+                                        <span
+                                            v-else
+                                            class="size-6 shrink-0"
+                                            aria-hidden="true"
+                                        />
 
-                                            <span
-                                                class="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded bg-muted ring-1 ring-border"
-                                            >
-                                                <img
-                                                    v-if="
-                                                        resolveLogoUrl(
-                                                            campus.logo_path,
-                                                        )
-                                                    "
-                                                    :src="
-                                                        resolveLogoUrl(
-                                                            campus.logo_path,
-                                                        )!
-                                                    "
-                                                    :alt="campus.name"
-                                                    class="size-full object-contain p-0.5"
-                                                    @error="
-                                                        (
-                                                            $event.target as HTMLImageElement
-                                                        ).style.display = 'none'
-                                                    "
-                                                />
-                                                <Landmark
-                                                    v-else
-                                                    class="size-3.5 text-muted-foreground"
-                                                />
-                                            </span>
-
-                                            <div class="min-w-0">
-                                                <div
-                                                    class="flex flex-wrap items-center gap-1.5"
-                                                >
-                                                    <p
-                                                        class="truncate text-[13px] font-medium"
-                                                    >
-                                                        {{ campus.name }}
-                                                    </p>
-                                                    <Badge
-                                                        variant="secondary"
-                                                        class="text-[11px]"
-                                                        >Campus</Badge
-                                                    >
-                                                    <OrgStatusBadge
-                                                        :active="
-                                                            campus.is_active
-                                                        "
-                                                    />
-                                                    <span
-                                                        class="text-[11px] text-muted-foreground"
-                                                    >
-                                                        {{
-                                                            campus.users_count ??
-                                                            0
-                                                        }}
-                                                        users
-                                                    </span>
-                                                </div>
-                                                <p
-                                                    class="truncate text-[11px] text-muted-foreground"
-                                                >
-                                                    {{
-                                                        campus.address ??
-                                                        campus.description ??
-                                                        campus.slug
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div
-                                            class="flex shrink-0 items-center gap-1"
+                                        <span
+                                            class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100 dark:bg-cyan-950/50 dark:text-cyan-400 dark:ring-cyan-900/50"
                                         >
-                                            <Button
-                                                v-if="canCreate"
-                                                size="icon"
-                                                variant="outline"
-                                                class="size-7"
-                                                :title="`Add child under ${campus.name}`"
-                                                :aria-label="`Add child under ${campus.name}`"
-                                                @click="
-                                                    openCreateOffice(campus)
-                                                "
-                                            >
-                                                <Plus class="size-3.5" />
-                                            </Button>
-
-                                            <OrgIconButton
-                                                v-if="canUpdate"
-                                                :icon="Pencil"
-                                                label="Edit campus"
-                                                @click="
-                                                    openEditOrganization(campus)
-                                                "
-                                            />
-
-                                            <ConfirmAction
-                                                v-if="canDelete"
-                                                title="Delete Organization?"
-                                                description="This action cannot be undone. Offices and departments under this campus will be removed."
-                                                confirm-label="Delete"
-                                                @confirm="
-                                                    router.delete(
-                                                        organizationsRoute.destroy(
-                                                            campus,
-                                                        ).url,
+                                            <img
+                                                v-if="
+                                                    resolveLogoUrl(
+                                                        campus.logo_path,
                                                     )
                                                 "
+                                                :src="
+                                                    resolveLogoUrl(
+                                                        campus.logo_path,
+                                                    )!
+                                                "
+                                                :alt="campus.name"
+                                                class="size-full object-contain p-0.5"
+                                                @error="
+                                                    (
+                                                        $event.target as HTMLImageElement
+                                                    ).style.display = 'none'
+                                                "
+                                            />
+                                            <Landmark
+                                                v-else
+                                                class="size-4.5"
+                                            />
+                                        </span>
+
+                                        <div class="min-w-0">
+                                            <div
+                                                class="flex flex-wrap items-center gap-2"
                                             >
-                                                <OrgIconButton
-                                                    :icon="Trash2"
-                                                    label="Delete campus"
-                                                    variant="ghost"
+                                                <h3
+                                                    class="truncate font-semibold text-foreground"
+                                                >
+                                                    {{ campus.name }}
+                                                </h3>
+                                                <Badge
+                                                    variant="secondary"
+                                                    class="text-[11px] bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100 hover:bg-cyan-50 dark:bg-cyan-950/40 dark:text-cyan-400 dark:ring-cyan-900/40"
+                                                    >Campus</Badge
+                                                >
+                                                <OrgStatusBadge
+                                                    :active="
+                                                        campus.is_active
+                                                    "
                                                 />
-                                            </ConfirmAction>
+                                                <span
+                                                    class="text-xs text-muted-foreground"
+                                                >
+                                                    {{
+                                                        campus.users_count ??
+                                                        0
+                                                    }}
+                                                    users
+                                                </span>
+                                            </div>
+                                            <p
+                                                class="mt-1 text-sm text-muted-foreground"
+                                            >
+                                                {{
+                                                    campus.address ??
+                                                    campus.description ??
+                                                    campus.slug
+                                                }}
+                                            </p>
                                         </div>
                                     </div>
 
-                                    <!-- Unit rows (recursive/collapsible) -->
                                     <div
-                                        v-if="
-                                            hasOffices(campus) &&
-                                            expandedCampuses.has(campus.id)
-                                        "
+                                        class="flex shrink-0 items-center gap-1"
                                     >
-                                        <div
-                                            class="border-b bg-muted/10 px-3 py-2 pl-10"
+                                        <Button
+                                            v-if="canCreate"
+                                            size="icon"
+                                            variant="outline"
+                                            class="size-8 rounded-lg"
+                                            :title="`Add child under ${campus.name}`"
+                                            :aria-label="`Add child under ${campus.name}`"
+                                            @click="
+                                                openCreateOffice(campus)
+                                            "
                                         >
-                                            <OrganizationUnitTree
-                                                :units="campus.units ?? []"
-                                                :campus="campus"
-                                                :expanded-unit-ids="
-                                                    expandedOffices
-                                                "
-                                                :can-create="canCreate"
-                                                :can-update="canUpdate"
-                                                :can-delete="canDelete"
-                                                @toggle="toggleOffice"
-                                                @create-child="
-                                                    openCreateDepartment
-                                                "
-                                                @edit="openEditUnit"
+                                            <Plus class="size-4" />
+                                        </Button>
+
+                                        <OrgIconButton
+                                            v-if="canUpdate"
+                                            :icon="Pencil"
+                                            class="size-8 rounded-lg"
+                                            label="Edit campus"
+                                            @click="
+                                                openEditOrganization(campus)
+                                            "
+                                        />
+
+                                        <ConfirmAction
+                                            v-if="canDelete"
+                                            title="Delete Organization?"
+                                            description="This action cannot be undone. Offices and departments under this campus will be removed."
+                                            confirm-label="Delete"
+                                            @confirm="
+                                                router.delete(
+                                                    organizationsRoute.destroy(
+                                                        campus,
+                                                    ).url,
+                                                )
+                                            "
+                                        >
+                                            <OrgIconButton
+                                                :icon="Trash2"
+                                                label="Delete campus"
+                                                variant="ghost"
+                                                class="size-8 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
                                             />
-                                        </div>
+                                        </ConfirmAction>
                                     </div>
                                 </div>
-                            </div>
+
+                                <!-- Unit rows (recursive/collapsible) -->
+                                <div
+                                    v-if="
+                                        hasOffices(campus) &&
+                                        expandedCampuses.has(campus.id)
+                                    "
+                                    class="mt-4 space-y-3 border-l-2 border-border/70 pl-6"
+                                >
+                                    <OrganizationUnitTree
+                                        :units="campus.units ?? []"
+                                        :campus="campus"
+                                        :expanded-unit-ids="
+                                            expandedOffices
+                                        "
+                                        :can-create="canCreate"
+                                        :can-update="canUpdate"
+                                        :can-delete="canDelete"
+                                        @toggle="toggleOffice"
+                                        @create-child="
+                                            openCreateDepartment
+                                        "
+                                        @edit="openEditUnit"
+                                    />
+                                </div>
+                            </section>
                         </div>
-                    </div>
-                </div>
+                    </article>
+                </template>
 
                 <!-- Empty state -->
                 <div v-else class="p-3">
@@ -976,21 +996,22 @@ const unitDialogTitle = computed(() => {
                 </div>
             </div>
 
-            <aside v-if="activityPanelOpen" class="rounded-lg border bg-card">
+            <!-- Activity Panel -->
+            <aside v-if="activityPanelOpen" class="rounded-2xl border border-border/70 bg-card p-4 shadow-xs h-fit sticky top-4">
                 <div
-                    class="flex items-start justify-between gap-2 border-b px-3 py-2"
+                    class="flex items-center justify-between pb-3 border-b border-border/30"
                 >
                     <div>
-                        <h2 class="text-sm font-semibold">Activity</h2>
-                        <p class="text-[11px] text-muted-foreground">
-                            Organizations module log
+                        <h2 class="font-semibold text-foreground">Activity</h2>
+                        <p class="text-xs text-muted-foreground">
+                            Recent organization updates
                         </p>
                     </div>
                     <Button
                         type="button"
                         size="icon"
                         variant="ghost"
-                        class="size-8 shrink-0"
+                        class="size-8 shrink-0 rounded-lg text-muted-foreground hover:text-foreground"
                         title="Hide activity log"
                         @click="activityPanelOpen = false"
                     >
@@ -1001,44 +1022,40 @@ const unitDialogTitle = computed(() => {
 
                 <div
                     v-if="activities.length"
-                    class="max-h-[calc(100vh-14rem)] overflow-y-auto px-3 py-3"
+                    class="max-h-[calc(100vh-16rem)] overflow-y-auto mt-4 space-y-4"
                 >
                     <div
                         v-for="(items, date) in activityGroups"
                         :key="date"
-                        class="space-y-3 pb-4 last:pb-0"
+                        class="space-y-3"
                     >
-                        <div
-                            class="flex items-center gap-2 text-[11px] font-medium text-muted-foreground"
-                        >
-                            <span class="h-px flex-1 bg-border" />
-                            <span>{{ date }}</span>
-                            <span class="h-px flex-1 bg-border" />
-                        </div>
+                        <p class="text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground/80 py-1">
+                            {{ date }}
+                        </p>
 
                         <div
                             v-for="activity in items"
                             :key="activity.id"
-                            class="flex gap-2"
+                            class="flex gap-3"
                         >
                             <div
-                                class="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-semibold text-primary ring-1 ring-primary/15"
+                                class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary ring-1 ring-primary/15"
                             >
                                 {{ activityInitials(activity) }}
                             </div>
 
                             <div class="min-w-0 flex-1">
                                 <div
-                                    class="flex min-w-0 flex-wrap items-center gap-x-1 text-[11px]"
+                                    class="flex min-w-0 flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground"
                                 >
-                                    <span class="font-semibold">
+                                    <span class="font-semibold text-foreground">
                                         {{ activity.causer?.name ?? 'System' }}
                                     </span>
-                                    <span class="text-muted-foreground">
+                                    <span class="text-[10px]">
                                         {{ activity.created_time }}
                                     </span>
                                 </div>
-                                <p class="text-[13px] leading-5">
+                                <p class="text-[13px] leading-relaxed text-foreground mt-0.5">
                                     {{ activity.description }}
                                 </p>
                             </div>
@@ -1050,7 +1067,7 @@ const unitDialogTitle = computed(() => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        class="mt-1 w-full"
+                        class="mt-2 w-full rounded-xl"
                         :disabled="activityLoading"
                         @click="loadMoreActivities"
                     >
@@ -1060,7 +1077,7 @@ const unitDialogTitle = computed(() => {
                     </Button>
                 </div>
 
-                <div v-else class="p-3">
+                <div v-else class="p-3 mt-4">
                     <EmptyState
                         title="No activity yet"
                         description="Organization changes will appear here as the hierarchy is updated."
