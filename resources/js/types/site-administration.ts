@@ -31,7 +31,7 @@ export type OrganizationUnit = {
     id: number;
     organization_id: number;
     parent_id: number | null;
-    type: 'office' | 'department';
+    type: 'campus' | 'office' | 'college' | 'department' | 'program';
     name: string;
     logo_path: string | null;
     address: string | null;

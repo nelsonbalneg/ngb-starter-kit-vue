@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Search } from '@lucide/vue';
+import { RotateCcw, Search } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -30,8 +30,14 @@ defineEmits<{
         </div>
         <slot />
         <div class="flex gap-2">
-            <Button type="submit" variant="secondary">Search</Button>
-            <Button type="button" variant="ghost" @click="$emit('reset')">Reset</Button>
+            <Button type="submit" variant="secondary">
+                <Search class="size-3.5" />
+                Search
+            </Button>
+            <Button type="button" variant="ghost" @click="$emit('reset')">
+                <RotateCcw class="size-3.5" />
+                Reset
+            </Button>
         </div>
     </form>
 </template>

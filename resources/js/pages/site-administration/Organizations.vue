@@ -3,18 +3,18 @@ import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 import { computed, reactive, ref, watch } from 'vue';
 import {
-    Building2,
     ChevronDown,
     ChevronRight,
-    GitBranch,
+    ArrowDownToLine,
     Landmark,
     ArrowLeftToLine,
     ArrowRightToLine,
     Pencil,
     Plus,
+    Save,
     School,
     Trash2,
-    UsersRound,
+    X,
 } from '@lucide/vue';
 
 import AsyncUserSelect from '@/components/site-administration/AsyncUserSelect.vue';
@@ -23,6 +23,7 @@ import AdminToolbar from '@/components/site-administration/AdminToolbar.vue';
 import ConfirmAction from '@/components/site-administration/ConfirmAction.vue';
 import EmptyState from '@/components/site-administration/EmptyState.vue';
 import OrgIconButton from '@/components/site-administration/OrgIconButton.vue';
+import OrganizationUnitTree from '@/components/site-administration/OrganizationUnitTree.vue';
 import OrgLogoDropzone from '@/components/site-administration/OrgLogoDropzone.vue';
 import OrgStatusBadge from '@/components/site-administration/OrgStatusBadge.vue';
 import InputError from '@/components/InputError.vue';
@@ -78,7 +79,7 @@ type OrganizationForm = {
 type UnitForm = {
     organization_id: number | null;
     parent_id: number | null;
-    type: 'office' | 'department';
+    type: OrganizationUnit['type'];
     name: string;
     logo: File | null;
     logo_path: string;
@@ -212,6 +213,12 @@ const hasOffices = (organization: Organization): boolean =>
 const hasDepartments = (unit: OrganizationUnit): boolean =>
     (unit.children ?? []).length > 0;
 
+const unitIdsWithChildren = (units: OrganizationUnit[] = []): number[] =>
+    units.flatMap((unit) => [
+        ...(hasDepartments(unit) ? [unit.id] : []),
+        ...unitIdsWithChildren(unit.children ?? []),
+    ]);
+
 type OrganizationExpansionState = {
     parents: number[];
     campuses: number[];
@@ -293,9 +300,7 @@ const expandedOffices = ref<Set<number>>(
         savedExpansionState.offices,
         props.organizations.flatMap((parent) =>
             (parent.children ?? []).flatMap((campus) =>
-                (campus.units ?? [])
-                    .filter(hasDepartments)
-                    .map((office) => office.id),
+                unitIdsWithChildren(campus.units ?? []),
             ),
         ),
     ),
@@ -445,6 +450,30 @@ const unitForm = useForm<UnitForm>({
     is_active: true,
 });
 
+const organizationUnitTypeOptions: {
+    value: OrganizationUnit['type'];
+    label: string;
+}[] = [
+    { value: 'campus', label: 'Campus' },
+    { value: 'office', label: 'Office' },
+    { value: 'college', label: 'College' },
+    { value: 'department', label: 'Department' },
+    { value: 'program', label: 'Program' },
+];
+
+const childRequiredUnitTypes: OrganizationUnit['type'][] = [
+    'department',
+    'program',
+];
+
+const unitTypeLabel = (type: OrganizationUnit['type']): string =>
+    organizationUnitTypeOptions.find((option) => option.value === type)
+        ?.label ?? 'Unit';
+
+const isParentUnitRequired = computed(() =>
+    childRequiredUnitTypes.includes(unitForm.type),
+);
+
 // ─── Auto-description ────────────────────────────────────────────────────────
 
 const orgDescriptionAuto = ref(true);
@@ -561,7 +590,7 @@ const orgDialogTitle = computed(() => {
 
 const unitDialogTitle = computed(() => {
     if (editingUnit.value) return 'Edit Unit';
-    return unitForm.type === 'office' ? 'Add Office' : 'Add Department';
+    return `Add ${unitTypeLabel(unitForm.type)}`;
 });
 </script>
 
@@ -603,11 +632,13 @@ const unitDialogTitle = computed(() => {
 
                     <Button
                         v-if="canCreate"
-                        size="sm"
+                        size="icon"
+                        class="size-8"
+                        title="Add parent organization"
+                        aria-label="Add parent organization"
                         @click="openCreateUniversity"
                     >
                         <Plus class="size-3.5" />
-                        Add Parent
                     </Button>
                 </div>
 
@@ -694,13 +725,14 @@ const unitDialogTitle = computed(() => {
                             <div class="flex shrink-0 items-center gap-1">
                                 <Button
                                     v-if="canCreate"
-                                    size="sm"
+                                    size="icon"
                                     variant="outline"
-                                    class="h-7 text-[12px]"
+                                    class="size-7"
+                                    :title="`Add child under ${parent.name}`"
+                                    :aria-label="`Add child under ${parent.name}`"
                                     @click="openCreateCampus(parent)"
                                 >
-                                    <Plus class="size-3" />
-                                    Campus
+                                    <Plus class="size-3.5" />
                                 </Button>
 
                                 <OrgIconButton
@@ -859,15 +891,16 @@ const unitDialogTitle = computed(() => {
                                         >
                                             <Button
                                                 v-if="canCreate"
-                                                size="sm"
+                                                size="icon"
                                                 variant="outline"
-                                                class="h-7 text-[12px]"
+                                                class="size-7"
+                                                :title="`Add child under ${campus.name}`"
+                                                :aria-label="`Add child under ${campus.name}`"
                                                 @click="
                                                     openCreateOffice(campus)
                                                 "
                                             >
-                                                <Plus class="size-3" />
-                                                Office
+                                                <Plus class="size-3.5" />
                                             </Button>
 
                                             <OrgIconButton
@@ -901,7 +934,7 @@ const unitDialogTitle = computed(() => {
                                         </div>
                                     </div>
 
-                                    <!-- Office rows (collapsible) -->
+                                    <!-- Unit rows (recursive/collapsible) -->
                                     <div
                                         v-if="
                                             hasOffices(campus) &&
@@ -909,347 +942,23 @@ const unitDialogTitle = computed(() => {
                                         "
                                     >
                                         <div
-                                            class="divide-y border-b bg-muted/10 pl-7"
+                                            class="border-b bg-muted/10 px-3 py-2 pl-10"
                                         >
-                                            <!-- ── Office Row ── -->
-                                            <div
-                                                v-for="office in campus.units ??
-                                                []"
-                                                :key="office.id"
-                                                class="py-2 pr-3"
-                                            >
-                                                <div
-                                                    class="flex items-start justify-between gap-2"
-                                                >
-                                                    <div
-                                                        class="flex min-w-0 gap-2"
-                                                    >
-                                                        <button
-                                                            v-if="
-                                                                hasDepartments(
-                                                                    office,
-                                                                )
-                                                            "
-                                                            type="button"
-                                                            :aria-label="
-                                                                expandedOffices.has(
-                                                                    office.id,
-                                                                )
-                                                                    ? `Collapse ${office.name}`
-                                                                    : `Expand ${office.name}`
-                                                            "
-                                                            class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                                            @click="
-                                                                toggleOffice(
-                                                                    office.id,
-                                                                )
-                                                            "
-                                                        >
-                                                            <ChevronDown
-                                                                v-if="
-                                                                    expandedOffices.has(
-                                                                        office.id,
-                                                                    )
-                                                                "
-                                                                class="size-4"
-                                                            />
-                                                            <ChevronRight
-                                                                v-else
-                                                                class="size-4"
-                                                            />
-                                                        </button>
-                                                        <span
-                                                            v-else
-                                                            class="size-5 shrink-0"
-                                                            aria-hidden="true"
-                                                        />
-
-                                                        <span
-                                                            class="mt-0.5 flex size-6 shrink-0 items-center justify-center overflow-hidden rounded bg-background ring-1 ring-border"
-                                                        >
-                                                            <img
-                                                                v-if="
-                                                                    resolveLogoUrl(
-                                                                        office.logo_path,
-                                                                    )
-                                                                "
-                                                                :src="
-                                                                    resolveLogoUrl(
-                                                                        office.logo_path,
-                                                                    )!
-                                                                "
-                                                                :alt="
-                                                                    office.name
-                                                                "
-                                                                class="size-full object-contain p-0.5"
-                                                                @error="
-                                                                    (
-                                                                        $event.target as HTMLImageElement
-                                                                    ).style.display =
-                                                                        'none'
-                                                                "
-                                                            />
-                                                            <Building2
-                                                                v-else
-                                                                class="size-3.5 text-muted-foreground"
-                                                            />
-                                                        </span>
-
-                                                        <div class="min-w-0">
-                                                            <div
-                                                                class="flex flex-wrap items-center gap-1.5"
-                                                            >
-                                                                <p
-                                                                    class="truncate text-[13px] font-medium"
-                                                                >
-                                                                    {{
-                                                                        office.name
-                                                                    }}
-                                                                </p>
-                                                                <Badge
-                                                                    variant="outline"
-                                                                    class="text-[11px]"
-                                                                    >Office</Badge
-                                                                >
-                                                                <OrgStatusBadge
-                                                                    :active="
-                                                                        office.is_active
-                                                                    "
-                                                                />
-                                                            </div>
-                                                            <p
-                                                                class="truncate text-[11px] text-muted-foreground"
-                                                            >
-                                                                {{
-                                                                    office.address ??
-                                                                    office.description ??
-                                                                    '—'
-                                                                }}
-                                                            </p>
-                                                            <div
-                                                                class="mt-1 flex flex-wrap items-center gap-1"
-                                                            >
-                                                                <UsersRound
-                                                                    class="size-3 text-muted-foreground"
-                                                                />
-                                                                <template
-                                                                    v-if="
-                                                                        office
-                                                                            .heads
-                                                                            .length
-                                                                    "
-                                                                >
-                                                                    <span
-                                                                        v-for="head in office.heads"
-                                                                        :key="
-                                                                            head.id
-                                                                        "
-                                                                        class="rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-medium"
-                                                                    >
-                                                                        {{
-                                                                            head.name
-                                                                        }}
-                                                                    </span>
-                                                                </template>
-                                                                <span
-                                                                    v-else
-                                                                    class="text-[11px] text-muted-foreground italic"
-                                                                >
-                                                                    No head
-                                                                    tagged
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div
-                                                        class="flex shrink-0 items-center gap-1 pt-0.5"
-                                                    >
-                                                        <Button
-                                                            v-if="canCreate"
-                                                            size="sm"
-                                                            variant="outline"
-                                                            class="h-7 text-[12px]"
-                                                            @click="
-                                                                openCreateDepartment(
-                                                                    campus,
-                                                                    office,
-                                                                )
-                                                            "
-                                                        >
-                                                            <Plus
-                                                                class="size-3"
-                                                            />
-                                                            Dept
-                                                        </Button>
-
-                                                        <OrgIconButton
-                                                            v-if="canUpdate"
-                                                            :icon="Pencil"
-                                                            label="Edit office"
-                                                            @click="
-                                                                openEditUnit(
-                                                                    office,
-                                                                )
-                                                            "
-                                                        />
-
-                                                        <ConfirmAction
-                                                            v-if="canDelete"
-                                                            title="Delete Organization?"
-                                                            description="This action cannot be undone. Departments under this office will also be removed."
-                                                            confirm-label="Delete"
-                                                            @confirm="
-                                                                router.delete(
-                                                                    organizationUnitsRoute.destroy(
-                                                                        office,
-                                                                    ).url,
-                                                                )
-                                                            "
-                                                        >
-                                                            <OrgIconButton
-                                                                :icon="Trash2"
-                                                                label="Delete office"
-                                                                variant="ghost"
-                                                            />
-                                                        </ConfirmAction>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Department sub-rows -->
-                                                <div
-                                                    v-if="
-                                                        hasDepartments(
-                                                            office,
-                                                        ) &&
-                                                        expandedOffices.has(
-                                                            office.id,
-                                                        )
-                                                    "
-                                                    class="mt-2 space-y-1 border-t pt-2 pl-7"
-                                                >
-                                                    <div
-                                                        v-for="department in office.children ??
-                                                        []"
-                                                        :key="department.id"
-                                                        class="flex items-center justify-between gap-2 rounded-md bg-background px-2 py-1.5 ring-1 ring-border"
-                                                    >
-                                                        <div
-                                                            class="flex min-w-0 items-center gap-2"
-                                                        >
-                                                            <span
-                                                                class="flex size-5 shrink-0 items-center justify-center overflow-hidden rounded bg-muted ring-1 ring-border"
-                                                            >
-                                                                <img
-                                                                    v-if="
-                                                                        resolveLogoUrl(
-                                                                            department.logo_path,
-                                                                        )
-                                                                    "
-                                                                    :src="
-                                                                        resolveLogoUrl(
-                                                                            department.logo_path,
-                                                                        )!
-                                                                    "
-                                                                    :alt="
-                                                                        department.name
-                                                                    "
-                                                                    class="size-full object-contain p-0.5"
-                                                                    @error="
-                                                                        (
-                                                                            $event.target as HTMLImageElement
-                                                                        ).style.display =
-                                                                            'none'
-                                                                    "
-                                                                />
-                                                                <GitBranch
-                                                                    v-else
-                                                                    class="size-3 text-muted-foreground"
-                                                                />
-                                                            </span>
-                                                            <div
-                                                                class="min-w-0"
-                                                            >
-                                                                <p
-                                                                    class="truncate text-[12px] font-medium"
-                                                                >
-                                                                    {{
-                                                                        department.name
-                                                                    }}
-                                                                </p>
-                                                                <p
-                                                                    class="truncate text-[11px] text-muted-foreground"
-                                                                >
-                                                                    Head:
-                                                                    <span
-                                                                        v-if="
-                                                                            department
-                                                                                .heads
-                                                                                .length
-                                                                        "
-                                                                    >
-                                                                        {{
-                                                                            department.heads
-                                                                                .map(
-                                                                                    (
-                                                                                        h,
-                                                                                    ) =>
-                                                                                        h.name,
-                                                                                )
-                                                                                .join(
-                                                                                    ', ',
-                                                                                )
-                                                                        }}
-                                                                    </span>
-                                                                    <span
-                                                                        v-else
-                                                                        class="italic"
-                                                                        >Not
-                                                                        tagged</span
-                                                                    >
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div
-                                                            class="flex shrink-0 items-center gap-1"
-                                                        >
-                                                            <OrgIconButton
-                                                                v-if="canUpdate"
-                                                                :icon="Pencil"
-                                                                label="Edit department"
-                                                                @click="
-                                                                    openEditUnit(
-                                                                        department,
-                                                                    )
-                                                                "
-                                                            />
-
-                                                            <ConfirmAction
-                                                                v-if="canDelete"
-                                                                title="Delete Organization?"
-                                                                description="This action cannot be undone. This department will be removed from the office hierarchy."
-                                                                confirm-label="Delete"
-                                                                @confirm="
-                                                                    router.delete(
-                                                                        organizationUnitsRoute.destroy(
-                                                                            department,
-                                                                        ).url,
-                                                                    )
-                                                                "
-                                                            >
-                                                                <OrgIconButton
-                                                                    :icon="
-                                                                        Trash2
-                                                                    "
-                                                                    label="Delete department"
-                                                                    variant="ghost"
-                                                                />
-                                                            </ConfirmAction>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <OrganizationUnitTree
+                                                :units="campus.units ?? []"
+                                                :campus="campus"
+                                                :expanded-unit-ids="
+                                                    expandedOffices
+                                                "
+                                                :can-create="canCreate"
+                                                :can-update="canUpdate"
+                                                :can-delete="canDelete"
+                                                @toggle="toggleOffice"
+                                                @create-child="
+                                                    openCreateDepartment
+                                                "
+                                                @edit="openEditUnit"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -1346,6 +1055,7 @@ const unitDialogTitle = computed(() => {
                         @click="loadMoreActivities"
                     >
                         <Spinner v-if="activityLoading" class="size-3.5" />
+                        <ArrowDownToLine v-else class="size-3.5" />
                         Load older activity
                     </Button>
                 </div>
@@ -1375,12 +1085,12 @@ const unitDialogTitle = computed(() => {
         <!-- ─── Organization Dialog ──────────────────────────────────────────────── -->
         <Dialog v-model:open="organizationDialogOpen">
             <DialogScrollContent class="max-w-lg">
-                <DialogHeader class="px-0 pb-2">
+                <DialogHeader class="px-1 pb-3">
                     <DialogTitle>{{ orgDialogTitle }}</DialogTitle>
                 </DialogHeader>
 
                 <form @submit.prevent="submitOrganization">
-                    <div class="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+                    <div class="max-h-[60vh] space-y-5 overflow-y-auto px-1.5 pr-2">
                         <!-- Section: Classification -->
                         <div class="space-y-3">
                             <p
@@ -1389,8 +1099,8 @@ const unitDialogTitle = computed(() => {
                                 Classification
                             </p>
 
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="ml-1 space-y-1.5">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-2">
                                     <Label class="text-[12px]"
                                         >Type
                                         <span class="text-destructive"
@@ -1399,7 +1109,7 @@ const unitDialogTitle = computed(() => {
                                     >
                                     <select
                                         v-model="organizationForm.type"
-                                        class="h-8 w-full rounded-md border bg-background px-2 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
+                                        class="h-9 w-full rounded-md border bg-background px-3 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
                                         @change="
                                             organizationForm.clearErrors(
                                                 'type',
@@ -1416,7 +1126,7 @@ const unitDialogTitle = computed(() => {
 
                                 <div
                                     v-if="organizationForm.type === 'campus'"
-                                    class="ml-1 space-y-1.5"
+                                    class="space-y-2"
                                 >
                                     <Label class="text-[12px]"
                                         >Parent
@@ -1426,7 +1136,7 @@ const unitDialogTitle = computed(() => {
                                     >
                                     <select
                                         v-model="organizationForm.parent_id"
-                                        class="h-8 w-full rounded-md border bg-background px-2 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
+                                        class="h-9 w-full rounded-md border bg-background px-3 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
                                         @change="
                                             organizationForm.clearErrors(
                                                 'parent_id',
@@ -1466,8 +1176,8 @@ const unitDialogTitle = computed(() => {
                                 Details
                             </p>
 
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="space-y-1.5">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-2">
                                     <Label class="text-[12px]"
                                         >Name
                                         <span class="text-destructive"
@@ -1476,7 +1186,7 @@ const unitDialogTitle = computed(() => {
                                     >
                                     <Input
                                         v-model="organizationForm.name"
-                                        class="h-8 text-[13px]"
+                                        class="h-9 px-3 text-[13px]"
                                         required
                                         @update:model-value="
                                             organizationForm.clearErrors('name')
@@ -1486,11 +1196,11 @@ const unitDialogTitle = computed(() => {
                                         :message="organizationForm.errors.name"
                                     />
                                 </div>
-                                <div class="space-y-1.5">
+                                <div class="space-y-2">
                                     <Label class="text-[12px]">Slug</Label>
                                     <Input
                                         v-model="organizationForm.slug"
-                                        class="h-8 font-mono text-[13px]"
+                                        class="h-9 px-3 font-mono text-[13px]"
                                         placeholder="auto-generated"
                                         @update:model-value="
                                             organizationForm.clearErrors('slug')
@@ -1502,19 +1212,19 @@ const unitDialogTitle = computed(() => {
                                 </div>
                             </div>
 
-                            <div class="space-y-1.5">
+                            <div class="space-y-2">
                                 <Label class="text-[12px]">Address</Label>
                                 <Input
                                     v-model="organizationForm.address"
-                                    class="h-8 text-[13px]"
+                                    class="h-9 px-3 text-[13px]"
                                 />
                             </div>
 
-                            <div class="space-y-1.5">
+                            <div class="space-y-2">
                                 <Label class="text-[12px]">Description</Label>
                                 <Input
                                     v-model="organizationForm.description"
-                                    class="h-8 text-[13px]"
+                                    class="h-9 px-3 text-[13px]"
                                     @input="orgDescriptionAuto = false"
                                 />
                             </div>
@@ -1563,19 +1273,24 @@ const unitDialogTitle = computed(() => {
                             type="button"
                             variant="ghost"
                             size="sm"
+                            class="h-9 px-4"
                             @click="organizationDialogOpen = false"
                         >
+                            <X class="size-3.5" />
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             size="sm"
+                            class="h-9 px-4"
                             :disabled="organizationForm.processing"
                         >
                             <Spinner
                                 v-if="organizationForm.processing"
                                 class="size-3.5"
                             />
+                            <Save v-else-if="editingOrganization" class="size-3.5" />
+                            <Plus v-else class="size-3.5" />
                             {{
                                 editingOrganization ? 'Save Changes' : 'Create'
                             }}
@@ -1585,15 +1300,15 @@ const unitDialogTitle = computed(() => {
             </DialogScrollContent>
         </Dialog>
 
-        <!-- ─── Unit (Office / Department) Dialog ────────────────────────────────── -->
+        <!-- ─── Unit Dialog ──────────────────────────────────────────────────────── -->
         <Dialog v-model:open="unitDialogOpen">
             <DialogScrollContent class="max-w-lg">
-                <DialogHeader class="px-0 pb-2">
+                <DialogHeader class="px-1 pb-3">
                     <DialogTitle>{{ unitDialogTitle }}</DialogTitle>
                 </DialogHeader>
 
                 <form @submit.prevent="submitUnit">
-                    <div class="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+                    <div class="max-h-[60vh] space-y-5 overflow-y-auto px-1.5 pr-2">
                         <!-- Section: Classification -->
                         <div class="space-y-3">
                             <p
@@ -1602,8 +1317,8 @@ const unitDialogTitle = computed(() => {
                                 Classification
                             </p>
 
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="space-y-1.5">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-2">
                                     <Label class="text-[12px]"
                                         >Campus
                                         <span class="text-destructive"
@@ -1612,7 +1327,13 @@ const unitDialogTitle = computed(() => {
                                     >
                                     <select
                                         v-model="unitForm.organization_id"
-                                        class="h-8 w-full rounded-md border bg-background px-2 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
+                                        class="h-9 w-full rounded-md border bg-background px-3 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
+                                        @change="
+                                            unitForm.clearErrors(
+                                                'organization_id',
+                                                'parent_id',
+                                            )
+                                        "
                                     >
                                         <option :value="null">
                                             — Select campus —
@@ -1632,7 +1353,7 @@ const unitDialogTitle = computed(() => {
                                     />
                                 </div>
 
-                                <div class="space-y-1.5">
+                                <div class="space-y-2">
                                     <Label class="text-[12px]"
                                         >Type
                                         <span class="text-destructive"
@@ -1641,32 +1362,49 @@ const unitDialogTitle = computed(() => {
                                     >
                                     <select
                                         v-model="unitForm.type"
-                                        class="h-8 w-full rounded-md border bg-background px-2 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
+                                        class="h-9 w-full rounded-md border bg-background px-3 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
+                                        @change="
+                                            unitForm.clearErrors(
+                                                'type',
+                                                'parent_id',
+                                            );
+                                        "
                                     >
-                                        <option value="office">Office</option>
-                                        <option value="department">
-                                            Department
+                                        <option
+                                            v-for="option in organizationUnitTypeOptions"
+                                            :key="option.value"
+                                            :value="option.value"
+                                        >
+                                            {{ option.label }}
                                         </option>
                                     </select>
                                 </div>
                             </div>
 
                             <div
-                                v-if="unitForm.type === 'department'"
-                                class="space-y-1.5"
+                                class="space-y-2"
                             >
                                 <Label class="text-[12px]"
-                                    >Parent Office
-                                    <span class="text-destructive"
+                                    >Parent Unit
+                                    <span
+                                        v-if="isParentUnitRequired"
+                                        class="text-destructive"
                                         >*</span
                                     ></Label
                                 >
                                 <select
                                     v-model="unitForm.parent_id"
-                                    class="h-8 w-full rounded-md border bg-background px-2 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
+                                    class="h-9 w-full rounded-md border bg-background px-3 text-[13px] focus:ring-2 focus:ring-ring focus:outline-none"
+                                    @change="
+                                        unitForm.clearErrors('parent_id')
+                                    "
                                 >
                                     <option :value="null">
-                                        — Select office —
+                                        {{
+                                            isParentUnitRequired
+                                                ? '— Select parent unit —'
+                                                : '— No parent unit —'
+                                        }}
                                     </option>
                                     <option
                                         v-for="office in officeUnits.filter(
@@ -1696,7 +1434,7 @@ const unitDialogTitle = computed(() => {
                                 Details
                             </p>
 
-                            <div class="space-y-1.5">
+                            <div class="space-y-2">
                                 <Label class="text-[12px]"
                                     >Name
                                     <span class="text-destructive"
@@ -1705,7 +1443,7 @@ const unitDialogTitle = computed(() => {
                                 >
                                 <Input
                                     v-model="unitForm.name"
-                                    class="h-8 text-[13px]"
+                                    class="h-9 px-3 text-[13px]"
                                     required
                                     @update:model-value="
                                         unitForm.clearErrors('name')
@@ -1714,19 +1452,19 @@ const unitDialogTitle = computed(() => {
                                 <InputError :message="unitForm.errors.name" />
                             </div>
 
-                            <div class="space-y-1.5">
+                            <div class="space-y-2">
                                 <Label class="text-[12px]">Address</Label>
                                 <Input
                                     v-model="unitForm.address"
-                                    class="h-8 text-[13px]"
+                                    class="h-9 px-3 text-[13px]"
                                 />
                             </div>
 
-                            <div class="space-y-1.5">
+                            <div class="space-y-2">
                                 <Label class="text-[12px]">Description</Label>
                                 <Input
                                     v-model="unitForm.description"
-                                    class="h-8 text-[13px]"
+                                    class="h-9 px-3 text-[13px]"
                                     @input="unitDescriptionAuto = false"
                                 />
                             </div>
@@ -1734,12 +1472,12 @@ const unitDialogTitle = computed(() => {
 
                         <Separator />
 
-                        <!-- Section: Head of Office -->
+                        <!-- Section: Head -->
                         <div class="space-y-3">
                             <p
                                 class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase"
                             >
-                                Head of Office
+                                Head
                             </p>
                             <AsyncUserSelect
                                 v-model="unitForm.head_user_ids"
@@ -1793,19 +1531,24 @@ const unitDialogTitle = computed(() => {
                             type="button"
                             variant="ghost"
                             size="sm"
+                            class="h-9 px-4"
                             @click="unitDialogOpen = false"
                         >
+                            <X class="size-3.5" />
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             size="sm"
+                            class="h-9 px-4"
                             :disabled="unitForm.processing"
                         >
                             <Spinner
                                 v-if="unitForm.processing"
                                 class="size-3.5"
                             />
+                            <Save v-else-if="editingUnit" class="size-3.5" />
+                            <Plus v-else class="size-3.5" />
                             {{ editingUnit ? 'Save Changes' : 'Create' }}
                         </Button>
                     </DialogFooter>

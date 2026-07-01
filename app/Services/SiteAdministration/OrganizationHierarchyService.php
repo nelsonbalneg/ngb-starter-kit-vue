@@ -70,51 +70,40 @@ class OrganizationHierarchyService
         $organizationId = (int) ($data['organization_id'] ?? 0);
         $type = (string) ($data['type'] ?? '');
         $parentId = $data['parent_id'] ?? null;
+        $rootUnitTypes = [
+            OrganizationUnitType::Campus->value,
+            OrganizationUnitType::Office->value,
+            OrganizationUnitType::College->value,
+        ];
 
         if (! Organization::query()->whereKey($organizationId)->exists()) {
             $this->fail('organization_id', 'The selected campus does not exist.');
         }
 
-        if ($type === OrganizationUnitType::Office->value) {
-            if ($parentId !== null) {
-                $this->fail('parent_id', 'An office cannot be nested under another unit.');
+        if ($parentId === null) {
+            if ($unit !== null && $unit->children()->exists() && $unit->organization_id !== $organizationId) {
+                $this->fail('organization_id', 'Move child units before moving this unit to another campus.');
             }
 
-            if ($unit !== null && $unit->children()->exists() && $unit->organization_id !== $organizationId) {
-                $this->fail('organization_id', 'Move departments before moving an office to another campus.');
+            if (! in_array($type, $rootUnitTypes, true)) {
+                $this->fail('parent_id', 'The selected type must be assigned to a parent unit.');
             }
 
             return;
-        }
-
-        if ($type !== OrganizationUnitType::Department->value) {
-            $this->fail('type', 'The selected organization unit type is invalid.');
-        }
-
-        if ($parentId === null) {
-            $this->fail('parent_id', 'A department must be assigned to an office.');
         }
 
         if ($unit !== null && (int) $parentId === $unit->id) {
             $this->fail('parent_id', 'A unit cannot be its own parent.');
         }
 
-        if ($unit !== null && $unit->children()->exists()) {
-            $this->fail('type', 'Move child units before changing this unit into a department.');
-        }
-
         $parent = OrganizationUnit::query()->find($parentId);
 
         if (! $parent instanceof OrganizationUnit) {
-            $this->fail('parent_id', 'The selected parent office does not exist.');
-        }
-
-        if ($parent->type !== OrganizationUnitType::Office->value || $parent->parent_id !== null) {
-            $this->fail('parent_id', 'A department can only be nested under an office.');
+            $this->fail('parent_id', 'The selected parent unit does not exist.');
         }
 
         if ($parent->organization_id !== $organizationId) {
-            $this->fail('parent_id', 'The selected office belongs to a different campus.');
+            $this->fail('parent_id', 'The selected parent unit belongs to a different campus.');
         }
 
         if ($unit !== null && $this->unitDescendantIds($unit)->contains($parent->id)) {

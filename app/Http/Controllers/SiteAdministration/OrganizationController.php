@@ -39,7 +39,6 @@ class OrganizationController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'parent_id']),
             'officeUnits' => OrganizationUnit::query()
-                ->where('type', 'office')
                 ->orderBy('name')
                 ->get(['id', 'name', 'organization_id']),
             'filters' => $request->only(['search', 'status']),

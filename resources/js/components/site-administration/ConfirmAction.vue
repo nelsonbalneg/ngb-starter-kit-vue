@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Trash2 } from '@lucide/vue';
 import {
     Dialog,
     DialogContent,
@@ -40,6 +41,7 @@ defineEmits<{
                     :disabled="processing"
                     @click="$emit('confirm')"
                 >
+                    <Trash2 class="size-3.5" />
                     {{ confirmLabel ?? 'Confirm' }}
                 </Button>
             </DialogFooter>

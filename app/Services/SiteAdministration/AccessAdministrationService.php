@@ -55,7 +55,7 @@ class AccessAdministrationService
      */
     public function organizationHierarchy(array $filters): Collection
     {
-        return Organization::query()
+        $organizations = Organization::query()
             ->whereNull('parent_id')
             ->when($filters['search'] ?? null, fn (Builder $query, string $search): Builder => $query
                 ->where(fn (Builder $query): Builder => $query
@@ -70,13 +70,58 @@ class AccessAdministrationService
                         ->orWhere('address', 'like', "%{$search}%"))))
             ->when(($filters['status'] ?? null) === 'active', fn (Builder $query): Builder => $query->where('is_active', true))
             ->when(($filters['status'] ?? null) === 'inactive', fn (Builder $query): Builder => $query->where('is_active', false))
-            ->with([
-                'children.units.heads:id,name,email',
-                'children.units.children.heads:id,name,email',
-            ])
+            ->with('children')
             ->withCount('users')
             ->orderBy('name')
             ->get();
+
+        $this->attachRecursiveUnits($organizations);
+
+        return $organizations;
+    }
+
+    /**
+     * @param  Collection<int, Organization>  $organizations
+     */
+    private function attachRecursiveUnits(Collection $organizations): void
+    {
+        $campuses = $organizations
+            ->flatMap(fn (Organization $organization) => $organization->children)
+            ->values();
+
+        if ($campuses->isEmpty()) {
+            return;
+        }
+
+        $units = OrganizationUnit::query()
+            ->whereIn('organization_id', $campuses->pluck('id'))
+            ->with('heads:id,name,email')
+            ->orderBy('name')
+            ->get();
+
+        $unitsByCampus = $units->groupBy('organization_id');
+
+        $campuses->each(function (Organization $campus) use ($unitsByCampus): void {
+            $campusUnits = new Collection($unitsByCampus->get($campus->id, collect())->all());
+            $campus->setRelation('units', $this->buildUnitTree($campusUnits));
+        });
+    }
+
+    /**
+     * @param  Collection<int, OrganizationUnit>  $units
+     * @return Collection<int, OrganizationUnit>
+     */
+    private function buildUnitTree(Collection $units, ?int $parentId = null): Collection
+    {
+        $children = $units
+            ->filter(fn (OrganizationUnit $unit): bool => $unit->parent_id === $parentId)
+            ->values();
+
+        $children->each(function (OrganizationUnit $unit) use ($units): void {
+            $unit->setRelation('children', $this->buildUnitTree($units, $unit->id));
+        });
+
+        return $children;
     }
 
     /**
