@@ -179,6 +179,45 @@ const readableForeground = (hex: string): string => {
     return luminance > 0.62 ? '#111827' : '#ffffff';
 };
 
+const generatePrimaryShades = (hexColor: string): Record<string, string> => {
+    let hex = hexColor.replace('#', '');
+    if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    const tint = (r: number, g: number, b: number, factor: number): number[] => [
+        Math.round(r + (255 - r) * factor),
+        Math.round(g + (255 - g) * factor),
+        Math.round(b + (255 - b) * factor),
+    ];
+
+    const shade = (r: number, g: number, b: number, factor: number): number[] => [
+        Math.round(r * (1 - factor)),
+        Math.round(g * (1 - factor)),
+        Math.round(b * (1 - factor)),
+    ];
+
+    const toHex = (rgb: number[]): string =>
+        '#' + rgb.map((x) => x.toString(16).padStart(2, '0')).join('');
+
+    return {
+        '50': toHex(tint(r, g, b, 0.95)),
+        '100': toHex(tint(r, g, b, 0.90)),
+        '200': toHex(tint(r, g, b, 0.75)),
+        '300': toHex(tint(r, g, b, 0.50)),
+        '400': toHex(tint(r, g, b, 0.25)),
+        '500': '#' + hex,
+        '600': toHex(shade(r, g, b, 0.10)),
+        '700': toHex(shade(r, g, b, 0.20)),
+        '800': toHex(shade(r, g, b, 0.35)),
+        '900': toHex(shade(r, g, b, 0.50)),
+        '950': toHex(shade(r, g, b, 0.70)),
+    };
+};
+
 export function applyAppearanceSettings(
     settings?: Partial<AppearanceSettings> | null,
 ): AppearanceSettings {
@@ -228,6 +267,17 @@ export function applyAppearanceSettings(
         '--primary-foreground',
         readableForeground(normalized.accent_color),
     );
+
+    const primaryShades = generatePrimaryShades(normalized.accent_color);
+    Object.entries(primaryShades).forEach(([shade, hex]) => {
+        root.style.setProperty(`--primary-${shade}`, hex);
+    });
+
+    root.style.setProperty('--primary-hover', primaryShades['600']);
+    root.style.setProperty('--primary-active', primaryShades['700']);
+    root.style.setProperty('--primary-border', primaryShades['300']);
+    root.style.setProperty('--primary-bg-soft', primaryShades['50']);
+
     root.style.setProperty('--app-card-radius', `${normalized.card_radius}px`);
     root.style.setProperty('--radius', `${normalized.card_radius}px`);
     root.style.setProperty('--app-font-family', fontStacks[normalized.font]);

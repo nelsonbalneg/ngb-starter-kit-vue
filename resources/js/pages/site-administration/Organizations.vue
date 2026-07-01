@@ -697,7 +697,7 @@ const unitDialogTitle = computed(() => {
                                 />
 
                                 <span
-                                    class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:ring-blue-900/50"
+                                    class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary-50 text-primary-700 ring-1 ring-primary-100 dark:bg-primary-950/50 dark:text-primary-400 dark:ring-primary-900/50"
                                 >
                                     <img
                                         v-if="resolveLogoUrl(parent.logo_path)"
@@ -727,7 +727,7 @@ const unitDialogTitle = computed(() => {
                                         </h2>
                                         <Badge
                                             variant="outline"
-                                            class="text-[11px] bg-blue-50 text-blue-700 ring-1 ring-blue-100 hover:bg-blue-50 dark:bg-blue-950/40 dark:text-blue-400 dark:ring-blue-900/40"
+                                            class="text-[11px] bg-primary-50 text-primary-700 ring-1 ring-primary-100 hover:bg-primary-50 dark:bg-primary-950/40 dark:text-primary-400 dark:ring-primary-900/40"
                                             >Parent</Badge
                                         >
                                         <OrgStatusBadge

@@ -119,6 +119,49 @@
             })();
         </script>
 
+        @php
+            // Compute shades dynamically from accent color
+            $h = ltrim($accentColor, '#');
+            if (strlen($h) == 3) {
+                $h = $h[0] . $h[0] . $h[1] . $h[1] . $h[2] . $h[2];
+            }
+            $r = hexdec(substr($h, 0, 2));
+            $g = hexdec(substr($h, 2, 2));
+            $b = hexdec(substr($h, 4, 2));
+
+            $tint = function($r, $g, $b, $factor) {
+                return [
+                    (int) round($r + (255 - $r) * $factor),
+                    (int) round($g + (255 - $g) * $factor),
+                    (int) round($b + (255 - $b) * $factor)
+                ];
+            };
+
+            $shade = function($r, $g, $b, $factor) {
+                return [
+                    (int) round($r * (1 - $factor)),
+                    (int) round($g * (1 - $factor)),
+                    (int) round($b * (1 - $factor))
+                ];
+            };
+
+            $toHex = function($rgb) {
+                return sprintf("#%02x%02x%02x", $rgb[0], $rgb[1], $rgb[2]);
+            };
+
+            $p50 = $toHex($tint($r, $g, $b, 0.95));
+            $p100 = $toHex($tint($r, $g, $b, 0.9));
+            $p200 = $toHex($tint($r, $g, $b, 0.75));
+            $p300 = $toHex($tint($r, $g, $b, 0.5));
+            $p400 = $toHex($tint($r, $g, $b, 0.25));
+            $p500 = '#' . $h;
+            $p600 = $toHex($shade($r, $g, $b, 0.1));
+            $p700 = $toHex($shade($r, $g, $b, 0.2));
+            $p800 = $toHex($shade($r, $g, $b, 0.35));
+            $p900 = $toHex($shade($r, $g, $b, 0.5));
+            $p950 = $toHex($shade($r, $g, $b, 0.7));
+        @endphp
+
         {{-- Inline style to set the HTML background color and appearance variables immediately --}}
         <style>
             :root {
@@ -130,6 +173,23 @@
                 --radius: {{ $cardRadius }}px;
                 --app-font-family: {!! $selectedFontStack !!};
                 --font-sans: {!! $selectedFontStack !!};
+
+                --primary-50: {{ $p50 }};
+                --primary-100: {{ $p100 }};
+                --primary-200: {{ $p200 }};
+                --primary-300: {{ $p300 }};
+                --primary-400: {{ $p400 }};
+                --primary-500: {{ $p500 }};
+                --primary-600: {{ $p600 }};
+                --primary-700: {{ $p700 }};
+                --primary-800: {{ $p800 }};
+                --primary-900: {{ $p900 }};
+                --primary-950: {{ $p950 }};
+
+                --primary-hover: {{ $p600 }};
+                --primary-active: {{ $p700 }};
+                --primary-border: {{ $p300 }};
+                --primary-bg-soft: {{ $p50 }};
             }
 
             html {

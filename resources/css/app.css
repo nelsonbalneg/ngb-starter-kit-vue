@@ -29,6 +29,23 @@
     --color-primary: var(--primary);
     --color-primary-foreground: var(--primary-foreground);
 
+    --color-primary-50: var(--primary-50);
+    --color-primary-100: var(--primary-100);
+    --color-primary-200: var(--primary-200);
+    --color-primary-300: var(--primary-300);
+    --color-primary-400: var(--primary-400);
+    --color-primary-500: var(--primary-500);
+    --color-primary-600: var(--primary-600);
+    --color-primary-700: var(--primary-700);
+    --color-primary-800: var(--primary-800);
+    --color-primary-900: var(--primary-900);
+    --color-primary-950: var(--primary-950);
+
+    --color-primary-hover: var(--primary-hover);
+    --color-primary-active: var(--primary-active);
+    --color-primary-border: var(--primary-border);
+    --color-primary-bg-soft: var(--primary-bg-soft);
+
     --color-secondary: var(--secondary);
     --color-secondary-foreground: var(--secondary-foreground);
 
@@ -328,8 +345,8 @@ html.sidebar-light:not(.dark),
 html.sidebar-dark:not(.dark) {
     --sidebar-background: hsl(0 0% 100%) !important;
     --sidebar-foreground: hsl(215 25% 27%) !important;
-    --sidebar-accent: hsl(222 47% 12%) !important;
-    --sidebar-accent-foreground: hsl(0 0% 100%) !important;
+    --sidebar-accent: var(--primary) !important;
+    --sidebar-accent-foreground: var(--primary-foreground) !important;
     --sidebar-border: hsl(214 32% 91%) !important;
 }
 
@@ -337,8 +354,8 @@ html.sidebar-dark.dark,
 html.sidebar-light.dark {
     --sidebar-background: hsl(222 47% 8%) !important;
     --sidebar-foreground: hsl(210 40% 96%) !important;
-    --sidebar-accent: hsl(217 91% 18%) !important;
-    --sidebar-accent-foreground: hsl(210 40% 98%) !important;
+    --sidebar-accent: var(--primary) !important;
+    --sidebar-accent-foreground: var(--primary-foreground) !important;
     --sidebar-border: hsl(222 32% 18%) !important;
 }
 

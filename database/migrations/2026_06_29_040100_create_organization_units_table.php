@@ -11,7 +11,17 @@ return new class extends Migration
         Schema::create('organization_units', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('parent_id')->nullable()->constrained('organization_units')->cascadeOnDelete();
+            
+            $foreign = $table->foreignId('parent_id')
+                ->nullable()
+                ->constrained('organization_units');
+
+            if (\Illuminate\Support\Facades\DB::connection()->getDriverName() === 'sqlsrv') {
+                $foreign->noActionOnDelete();
+            } else {
+                $foreign->cascadeOnDelete();
+            }
+
             $table->string('type')->index();
             $table->string('name')->index();
             $table->string('logo_path')->nullable();
