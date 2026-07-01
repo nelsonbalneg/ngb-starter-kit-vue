@@ -46,8 +46,8 @@ const search = (): void => { router.get(lookupsRoute.index().url, query, { prese
         <div class="rounded-lg border bg-card">
             <div class="flex flex-col gap-2 border-b p-3 md:flex-row md:items-center md:justify-between">
                 <AdminToolbar v-model:search="query.search" placeholder="Search lookups" @submit="search" @reset="() => { query.search = ''; query.group = ''; query.status = ''; search(); }">
-                    <select v-model="query.group" class="h-8 rounded-md border bg-background px-2 text-[13px]"><option value="">All groups</option><option v-for="group in groups" :key="group" :value="group">{{ group }}</option></select>
-                    <select v-model="query.status" class="h-8 rounded-md border bg-background px-2 text-[13px]"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
+                    <select v-model="query.group" class="h-9 rounded-md border bg-background px-3 text-sm"><option value="">All groups</option><option v-for="group in groups" :key="group" :value="group">{{ group }}</option></select>
+                    <select v-model="query.status" class="h-9 rounded-md border bg-background px-3 text-sm"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
                 </AdminToolbar>
                 <Dialog>
                     <DialogTrigger as-child><Button @click="openCreate"><Plus class="size-4" /> Lookup</Button></DialogTrigger>

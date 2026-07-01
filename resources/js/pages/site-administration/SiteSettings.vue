@@ -85,6 +85,7 @@ type SettingsTab = 'branding' | 'appearance' | 'security' | 'maintenance';
 
 type Props = {
     settings: GroupedSettings;
+    currentTab?: string;
 };
 
 const props = defineProps<Props>();
@@ -99,9 +100,7 @@ defineOptions({
 });
 
 const initialTab = (): SettingsTab => {
-    if (typeof window === 'undefined') return 'branding';
-
-    const tab = new URLSearchParams(window.location.search).get('tab');
+    const tab = props.currentTab || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null);
 
     return ['branding', 'appearance', 'security', 'maintenance'].includes(
         tab ?? '',

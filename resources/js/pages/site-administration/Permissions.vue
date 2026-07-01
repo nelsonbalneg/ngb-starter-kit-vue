@@ -71,7 +71,7 @@ const search = (): void => {
         <div class="rounded-lg border bg-card">
             <div class="flex flex-col gap-2 border-b p-3 md:flex-row md:items-center md:justify-between">
                 <AdminToolbar v-model:search="query.search" placeholder="Search permissions" @submit="search" @reset="() => { query.search = ''; query.group = ''; search(); }">
-                    <select v-model="query.group" class="h-8 rounded-md border bg-background px-2 text-[13px]">
+                    <select v-model="query.group" class="h-9 rounded-md border bg-background px-3 text-sm">
                         <option value="">All groups</option>
                         <option v-for="group in groups" :key="group" :value="group">{{ group }}</option>
                     </select>

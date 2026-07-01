@@ -64,11 +64,11 @@ const search = (): void => {
         <div class="rounded-lg border bg-card">
             <div class="flex flex-col gap-2 border-b p-3 md:flex-row md:items-center md:justify-between">
                 <AdminToolbar v-model:search="query.search" placeholder="Search users" @submit="search" @reset="() => { query.search = ''; query.organization_id = ''; query.status = ''; search(); }">
-                    <select v-model="query.organization_id" class="h-8 rounded-md border bg-background px-2 text-[13px]">
+                    <select v-model="query.organization_id" class="h-9 rounded-md border bg-background px-3 text-sm">
                         <option value="">All organizations</option>
                         <option v-for="organization in organizations" :key="organization.id" :value="String(organization.id)">{{ organization.name }}</option>
                     </select>
-                    <select v-model="query.status" class="h-8 rounded-md border bg-background px-2 text-[13px]">
+                    <select v-model="query.status" class="h-9 rounded-md border bg-background px-3 text-sm">
                         <option value="">All statuses</option>
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>

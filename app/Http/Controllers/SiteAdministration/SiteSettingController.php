@@ -23,6 +23,7 @@ class SiteSettingController extends Controller
 
         return Inertia::render('site-administration/SiteSettings', [
             'settings' => $this->service->allGrouped(),
+            'currentTab' => $request->query('tab', 'branding'),
         ]);
     }
 

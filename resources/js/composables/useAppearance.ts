@@ -86,12 +86,26 @@ const fontStacks: Record<AppearanceSettings['font'], string> = {
     Poppins: 'Poppins, Inter, ui-sans-serif, system-ui, sans-serif',
 };
 
+const getCookie = (name: string): string | null => {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() ?? null;
+    return null;
+};
+
 const normalizeAppearanceSettings = (
     settings?: Partial<AppearanceSettings> | null,
-): AppearanceSettings => ({
-    ...defaultAppearanceSettings,
-    ...(settings ?? {}),
-});
+): AppearanceSettings => {
+    const themeCookie = getCookie('appearance') as Appearance | null;
+    const theme = themeCookie || settings?.theme || defaultAppearanceSettings.theme;
+
+    return {
+        ...defaultAppearanceSettings,
+        ...(settings ?? {}),
+        theme,
+    };
+};
 
 const setCookie = (name: string, value: string, days = 365): void => {
     if (typeof document === 'undefined') return;
@@ -293,12 +307,13 @@ export function useAppearance(): UseAppearanceReturn {
     );
 
     function updateAppearance(value: Appearance): void {
+        localStorage.setItem('appearance', value);
+        setCookie('appearance', value);
         applyAppearanceSettings({
             ...globalAppearance.value,
             theme: value,
         });
-        localStorage.setItem('appearance', value);
-        setCookie('appearance', value);
+        appearance.value = value;
     }
 
     return {

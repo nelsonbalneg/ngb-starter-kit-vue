@@ -31,7 +31,7 @@ defineProps({
                     <div
                         class="flex size-9 shrink-0 items-center justify-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/35 dark:text-amber-300"
                     >
-                        <AlertTriangle class="size-4.5" />
+                        <AlertTriangle class="size-[18px]" />
                     </div>
                     <div class="min-w-0">
                         <p

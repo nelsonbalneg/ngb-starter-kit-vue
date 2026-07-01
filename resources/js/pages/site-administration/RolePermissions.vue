@@ -109,7 +109,7 @@ const save = (): void => {
             <div class="flex flex-col gap-2 border-b p-3 md:flex-row md:items-end md:justify-between">
                 <div class="grid gap-1.5 md:w-72">
                     <Label>Role</Label>
-                    <select v-model="query.role_id" class="h-8 rounded-md border bg-background px-2 text-[13px]" @change="changeRole">
+                    <select v-model="query.role_id" class="h-9 rounded-md border bg-background px-3 text-sm" @change="changeRole">
                         <option value="">Select role</option>
                         <option v-for="role in matrix.roles" :key="role.id" :value="String(role.id)">
                             {{ role.name }}

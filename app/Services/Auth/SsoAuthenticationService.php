@@ -112,7 +112,9 @@ class SsoAuthenticationService
                 ]);
             }
 
-            $this->assignDefaultAccess($user);
+            if ($user->wasRecentlyCreated || $user->organizations()->count() === 0) {
+                $this->assignDefaultAccess($user);
+            }
 
             return $user;
         });

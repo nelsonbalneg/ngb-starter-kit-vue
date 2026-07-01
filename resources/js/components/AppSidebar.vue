@@ -7,6 +7,7 @@ import {
     LayoutGrid,
     ListTree,
     Settings,
+    LogOut,
 } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -21,7 +22,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
+import { dashboard, logout } from '@/routes';
 import authentication from '@/routes/site-administration/authentication';
 import lookups from '@/routes/site-administration/lookups';
 import organizations from '@/routes/site-administration/organizations';
@@ -90,16 +91,18 @@ const footerNavItems: NavItem[] = [
 
 <template>
     <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()">
-                            <AppLogo />
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
+        <SidebarHeader class="border-b border-sidebar-border/70 p-0 group-data-[state=collapsed]:border-b-0">
+            <div class="flex h-14 items-center px-4 group-data-[state=collapsed]:px-1.5 group-data-[state=collapsed]:justify-center">
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton size="lg" as-child class="hover:bg-transparent! active:bg-transparent!">
+                            <Link :href="dashboard()">
+                                <AppLogo />
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </div>
         </SidebarHeader>
 
         <SidebarContent>

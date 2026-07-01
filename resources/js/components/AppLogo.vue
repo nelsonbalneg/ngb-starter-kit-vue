@@ -7,7 +7,7 @@ const page = usePage();
 
 <template>
     <div
-        class="flex aspect-square size-7 items-center justify-center overflow-hidden rounded-md bg-sidebar-primary text-sidebar-primary-foreground"
+        class="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-sm shadow-sidebar-primary/25 ring-1 ring-white/10"
     >
         <template v-if="page.props.branding?.logo_light">
             <img
@@ -28,7 +28,7 @@ const page = usePage();
                 class="size-full object-contain hidden dark:block p-0.5 invert"
             />
         </template>
-        <AppLogoIcon v-else class="size-4 fill-current text-white dark:text-black" />
+        <AppLogoIcon v-else class="size-[18px] fill-current text-sidebar-primary-foreground" />
     </div>
     <div class="ml-0.5 grid flex-1 text-left text-[13px]">
         <span class="truncate leading-tight font-semibold">
